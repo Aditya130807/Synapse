@@ -5,6 +5,7 @@ import { env } from './config/env.js';
 import { requestLogger } from './middleware/requestLogger.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import healthRouter from './routes/health.js';
+import authRouter from './features/auth/auth.routes.js';
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use(requestLogger);
 
 // Routes
 app.use('/api', healthRouter);
+app.use('/api/auth', authRouter);
 
 // Error handling
 app.use(errorHandler);
