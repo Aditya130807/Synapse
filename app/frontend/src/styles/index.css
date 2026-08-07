@@ -1,1 +1,94 @@
 @import "tailwindcss";
+
+:root {
+  --background: #020617;
+  --foreground: #F8FAFC;
+
+  --surface: rgba(15, 23, 42, 0.82);
+  --surface-hover: rgba(20, 30, 50, 0.92);
+
+  --card: rgba(15, 23, 42, 0.82);
+  --card-foreground: #F8FAFC;
+
+  --popover: rgba(15, 23, 42, 0.95);
+  --popover-foreground: #F8FAFC;
+
+  --primary: #3B82F6;
+  --primary-hover: #2563EB;
+  --primary-foreground: #FFFFFF;
+
+  --text-primary: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --muted: #94A3B8;
+
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --purple-accent: #A855F7;
+
+  --border: rgba(255, 255, 255, 0.06);
+  --input: rgba(255, 255, 255, 0.06);
+  --ring: #3B82F6;
+
+  --radius: 1rem;
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-muted: var(--muted);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-purple-accent: var(--purple-accent);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --font-sans: "Geist", "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--text-primary);
+  font-family: "Geist", "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum";
+  min-height: 100vh;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Linear-Style Slim Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}

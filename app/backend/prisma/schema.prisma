@@ -7,11 +7,129 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum MessageRole {
+  user
+  assistant
+  system
 }
+
+enum ConversationStatus {
+  active
+  archived
+}
+
+enum FileStatus {
+  uploaded
+  processing
+  processed
+  failed
+}
+
+model User {
+  id             String          @id @default(cuid())
+  name           String
+  email          String          @unique
+  password       String
+  conversations  Conversation[]
+  knowledgeFiles KnowledgeFile[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Conversation {
+  id            String                      @id @default(cuid())
+  title         String                      @default("New Conversation")
+  status        ConversationStatus          @default(active)
+  userId        String
+  user          User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages      Message[]
+  attachedFiles ConversationKnowledgeFile[]
+  createdAt     DateTime                    @default(now())
+  updatedAt     DateTime                    @updatedAt
+
+  @@index([userId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           MessageRole
+  content        String       @db.Text
+  metadata       Json?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+}
+
+model KnowledgeFile {
+  id              String                      @id @default(cuid())
+  filename        String
+  originalName    String
+  extension       String
+  mimeType        String
+  size            Int
+  path            String
+  hash            String
+  status          FileStatus                  @default(uploaded)
+
+  lastAccessedAt  DateTime?
+  processedAt     DateTime?
+  tokenCount      Int?
+  pageCount       Int?
+  language        String?
+  summary         String?
+  vectorNamespace String?
+
+  userId          String
+  user            User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversations   ConversationKnowledgeFile[]
+  chunks          KnowledgeChunk[]
+
+  createdAt       DateTime                    @default(now())
+  updatedAt       DateTime                    @updatedAt
+
+  @@unique([userId, hash])
+  @@index([userId])
+}
+
+model ConversationKnowledgeFile {
+  id             String        @id @default(cuid())
+
+  conversationId String
+  conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  fileId         String
+  file           KnowledgeFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  attachedAt     DateTime      @default(now())
+  isPinned       Boolean       @default(true)
+
+  @@unique([conversationId, fileId])
+  @@index([conversationId])
+  @@index([fileId])
+}
+
+model KnowledgeChunk {
+  id            String        @id @default(cuid())
+
+  fileId        String
+  file          KnowledgeFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  chunkIndex    Int
+  page          Int?
+  content       String        @db.Text
+  tokenEstimate Int
+
+  embeddingId   String?
+  embeddedAt    DateTime?
+
+  createdAt     DateTime      @default(now())
+
+  @@index([fileId])
+  @@index([chunkIndex])
+}
+
+
+
+
