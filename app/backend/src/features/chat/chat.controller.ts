@@ -103,6 +103,8 @@ export async function createMessageHandler(
       req.body.role,
       req.body.content,
       req.body.metadata,
+      req.body.fileIds,
+      req.body.attachmentSources,
     );
 
     // 2. Generate and save the AI response (only for user-role messages)
@@ -133,7 +135,10 @@ export async function createStreamMessageHandler(
       req.body.role,
       req.body.content,
       req.body.metadata,
+      req.body.fileIds,
+      req.body.attachmentSources,
     );
+
 
     if (req.body.role !== 'user') {
       res.status(201).json({ userMessage, assistantMessage: null });

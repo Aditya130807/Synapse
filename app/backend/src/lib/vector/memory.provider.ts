@@ -28,13 +28,16 @@ export class MemoryVectorProvider implements VectorProvider {
   }
 
   async deleteByFileId(fileId: string, namespace = 'default'): Promise<void> {
-    const store = this.getNamespaceStorage(namespace);
-    for (const [id, record] of store.entries()) {
-      if (record.metadata.fileId === fileId) {
-        store.delete(id);
+    // Delete matching fileId vectors across all active namespaces
+    for (const store of this.storage.values()) {
+      for (const [id, record] of Array.from(store.entries())) {
+        if (record.metadata.fileId === fileId) {
+          store.delete(id);
+        }
       }
     }
   }
+
 
   async searchVectors(
     queryVector: number[],

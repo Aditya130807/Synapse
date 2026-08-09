@@ -24,6 +24,8 @@ export const createMessageSchema = z.object({
   role: z.enum(['user', 'assistant', 'system']),
   content: z.string().trim().min(1, 'Message content is required'),
   metadata: z.record(z.string(), z.unknown()).optional(),
+  fileIds: z.array(z.string()).optional(),
+  attachmentSources: z.record(z.string(), z.string()).optional(),
 });
 
 

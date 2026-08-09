@@ -101,7 +101,14 @@ export async function getMessages(
 
   const messages = await prisma.message.findMany({
     where: { conversationId },
-    orderBy: { createdAt: 'asc' }, // Oldest to Newest
+    include: {
+      attachments: {
+        include: {
+          file: true,
+        },
+      },
+    },
+    orderBy: { createdAt: 'asc' },
     take: limit + 1,
     ...(cursor && {
       cursor: { id: cursor },
@@ -127,6 +134,8 @@ export async function createMessage(
   role: MessageRole,
   content: string,
   metadata?: Record<string, unknown>,
+  fileIds?: string[],
+  attachmentSources?: Record<string, string>,
 ): Promise<MessageDTO> {
   const conversation = await prisma.conversation.findFirst({
     where: { id: conversationId, userId },
@@ -141,25 +150,74 @@ export async function createMessage(
   const shouldAutoTitle = role === 'user' && isDefaultTitle;
   const newTitle = shouldAutoTitle ? generateAutoTitle(content) : undefined;
 
-  const [message] = await prisma.$transaction([
-    prisma.message.create({
-      data: {
-        conversationId,
-        role,
-        content,
-        metadata: metadata ? JSON.parse(JSON.stringify(metadata)) : undefined,
-      },
-    }),
-    prisma.conversation.update({
-      where: { id: conversationId },
-      data: {
-        updatedAt: new Date(),
-        ...(newTitle && { title: newTitle }),
-      },
-    }),
-  ]);
+  const createdMessage = await prisma.message.create({
+    data: {
+      conversationId,
+      role,
+      content,
+      metadata: metadata ? JSON.parse(JSON.stringify(metadata)) : undefined,
+    },
+  });
 
-  return message as MessageDTO;
+  // Attach message knowledge files if provided
+  if (fileIds && fileIds.length > 0) {
+    for (const fId of fileIds) {
+      const source = attachmentSources?.[fId] || 'existing';
+      await prisma.messageKnowledgeFile.upsert({
+        where: {
+          messageId_fileId: {
+            messageId: createdMessage.id,
+            fileId: fId,
+          },
+        },
+        create: {
+          messageId: createdMessage.id,
+          fileId: fId,
+          source,
+        },
+        update: {
+          source,
+        },
+      });
+
+      // Maintain persistent conversation knowledge context
+      await prisma.conversationKnowledgeFile.upsert({
+        where: {
+          conversationId_fileId: {
+            conversationId,
+            fileId: fId,
+          },
+        },
+        create: {
+          conversationId,
+          fileId: fId,
+          isPinned: true,
+        },
+        update: {},
+      });
+    }
+  }
+
+  await prisma.conversation.update({
+    where: { id: conversationId },
+    data: {
+      updatedAt: new Date(),
+      ...(newTitle && { title: newTitle }),
+    },
+  });
+
+  const fullMessage = await prisma.message.findUnique({
+    where: { id: createdMessage.id },
+    include: {
+      attachments: {
+        include: {
+          file: true,
+        },
+      },
+    },
+  });
+
+  return fullMessage as MessageDTO;
 }
 
 export async function updateMessage(
@@ -189,6 +247,13 @@ export async function updateMessage(
     data: {
       ...(updates.content !== undefined && { content: updates.content }),
       ...(updates.metadata !== undefined && { metadata: JSON.parse(JSON.stringify(updates.metadata)) }),
+    },
+    include: {
+      attachments: {
+        include: {
+          file: true,
+        },
+      },
     },
   });
 

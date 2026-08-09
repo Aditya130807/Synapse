@@ -11,12 +11,28 @@ export interface ConversationDTO {
   updatedAt: Date;
 }
 
+export interface MessageAttachmentDTO {
+  id: string;
+  fileId: string;
+  source: string;
+  file: {
+    id: string;
+    filename: string;
+    originalName: string;
+    extension: string;
+    mimeType: string;
+    size: number;
+    status: string;
+  };
+}
+
 export interface MessageDTO {
   id: string;
   conversationId: string;
   role: MessageRole;
   content: string;
   metadata?: Record<string, unknown> | null;
+  attachments?: MessageAttachmentDTO[];
   createdAt: Date;
 }
 
@@ -33,6 +49,8 @@ export interface CreateMessageBody {
   role: MessageRole;
   content: string;
   metadata?: Record<string, unknown>;
+  fileIds?: string[];
+  attachmentSources?: Record<string, string>;
 }
 
 export interface GetMessagesQuery {

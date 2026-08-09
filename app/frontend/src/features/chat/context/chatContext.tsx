@@ -163,6 +163,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           attached: true,
           isDuplicate: res.isDuplicate || res.duplicate,
           message: res.message,
+          fileId: res.file?.id || (res as any).fileId || (res as any).id,
+
         };
       } catch (err) {
         console.error('Failed to upload and attach file', err);
@@ -258,8 +260,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       );
 
       try {
-        const updated = await chatService.renameConversation(id, title);
-        setConversations((prev) => prev.map((c) => (c.id === id ? updated : c)));
+        await chatService.renameConversation(id, title.trim());
       } catch (err) {
         console.error('Failed to rename conversation', err);
         setConversations(oldConversations);
@@ -272,31 +273,16 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const deleteConversation = useCallback(
     async (id: string) => {
       const oldConversations = conversations;
-      const filtered = conversations.filter((c) => c.id !== id);
-
-      setConversations(filtered);
-
+      setConversations((prev) => prev.filter((c) => c.id !== id));
       if (selectedConversationId === id) {
-        const nextActive = filtered.length > 0 && filtered[0]?.id ? filtered[0].id : null;
-        setSelectedConversationId(nextActive);
+        setSelectedConversationId(null);
       }
 
       try {
         await chatService.deleteConversation(id);
-        setMessagesMap((prev) => {
-          const next = { ...prev };
-          delete next[id];
-          return next;
-        });
-        setAttachedFilesMap((prev) => {
-          const next = { ...prev };
-          delete next[id];
-          return next;
-        });
       } catch (err) {
         console.error('Failed to delete conversation', err);
         setConversations(oldConversations);
-        setSelectedConversationId(id);
       }
     },
     [conversations, selectedConversationId],
@@ -435,8 +421,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Send message — Streamed SSE request flow
   const sendMessage = useCallback(
-    async (content: string) => {
-      if (!content.trim()) return;
+    async (content: string, fileIds?: string[], attachmentSources?: Record<string, string>, filesMeta?: Array<{fileId: string; filename: string; extension: string}>) => {
+      if (!content.trim() && (!fileIds || fileIds.length === 0)) return;
 
       let targetConvId = selectedConversationId;
 
@@ -458,6 +444,21 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         role: 'user',
         content: content.trim(),
         createdAt: new Date().toISOString(),
+        // Optimistic attachments — replaced by server-confirmed message once the stream starts
+        attachments: (filesMeta || []).map((meta, idx) => ({
+          id: `temp-att-${idx}`,
+          fileId: meta.fileId,
+          source: attachmentSources?.[meta.fileId] || 'existing',
+          file: {
+            id: meta.fileId,
+            filename: meta.filename,
+            originalName: meta.filename,
+            extension: meta.extension,
+            mimeType: 'application/octet-stream',
+            size: 0,
+            status: 'processed',
+          },
+        })),
       };
 
       const tempAssistantMessage: Message = {
@@ -516,6 +517,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
           },
           abortController.signal,
+          fileIds,
+          attachmentSources,
         );
 
         if (assistantMessage) {

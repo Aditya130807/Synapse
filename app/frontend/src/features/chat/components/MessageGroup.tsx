@@ -7,10 +7,16 @@ interface MessageGroupProps {
 }
 
 export const MessageGroup: React.FC<MessageGroupProps> = ({ messages }) => {
+  const latestUserMessageId = [...messages].reverse().find((m) => m.role === 'user')?.id;
+
   return (
-    <div className="space-y-3 w-full max-w-4xl mx-auto">
+    <div className="space-y-4 w-full max-w-4xl mx-auto">
       {messages.map((message) => (
-        <MessageBubble key={message.id} message={message} />
+        <MessageBubble
+          key={message.id}
+          message={message}
+          isLatestUserMessage={message.id === latestUserMessageId}
+        />
       ))}
     </div>
   );

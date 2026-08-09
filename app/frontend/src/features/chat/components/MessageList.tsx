@@ -1,18 +1,10 @@
 import React, { useRef, useEffect } from 'react';
 import { useChat } from '../context/chatContext';
 import { MessageGroup } from './MessageGroup';
-import { TypingIndicator } from './TypingIndicator';
 
 export const MessageList: React.FC = () => {
   const { currentMessages, isLoadingMessages, isGenerating, isStreaming } = useChat();
   const bottomRef = useRef<HTMLDivElement>(null);
-
-  const lastMessage = currentMessages[currentMessages.length - 1];
-  const isWaitingForFirstToken =
-    isGenerating &&
-    Boolean(lastMessage) &&
-    lastMessage?.role === 'assistant' &&
-    lastMessage?.content === '';
 
   const scrollToBottom = () => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -45,10 +37,6 @@ export const MessageList: React.FC = () => {
   return (
     <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 w-full">
       <MessageGroup messages={currentMessages} />
-
-      {/* Typing Indicator while waiting for the first token */}
-      {isWaitingForFirstToken && <TypingIndicator />}
-
       <div ref={bottomRef} className="h-1" />
     </div>
   );

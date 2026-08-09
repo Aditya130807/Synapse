@@ -28,10 +28,15 @@ import {
   validateQuery,
 } from './chat.validation.js';
 
+import memoryRouter from '../memory/memory.routes.js';
+
 const router = Router();
 
 // Protect all chat routes
 router.use(authenticate);
+
+// Memory routes
+router.use('/:id/memory', memoryRouter);
 
 // Conversations CRUD
 router.get('/', getConversationsHandler);

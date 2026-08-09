@@ -2,10 +2,12 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import prisma from '../../lib/prisma.js';
 import { storageProvider } from '../../lib/storage/local.storage.js';
+import { vectorProvider } from '../../lib/vector/vector.factory.js';
 import { validateFileExtension } from './files.validation.js';
 import { FileSort, type ListFilesQuery, type UpdateFilePayload, type UploadFileResult } from './files.types.js';
 import type { KnowledgeFile } from '@prisma/client';
 import { documentProcessorService } from '../document-processing/documentProcessor.service.js';
+
 
 export class FilesService {
   async processAndSaveUploadedFile(
@@ -374,14 +376,28 @@ export class FilesService {
   async deleteFile(id: string, userId: string): Promise<void> {
     const file = await this.getFileById(id, userId);
 
-    // Remove physical file from storage
-    await storageProvider.deleteFile(file.path);
+    // 1. Delete associated vector embeddings from Vector Database
+    try {
+      await vectorProvider.deleteByFileId(file.id, process.env.PINECONE_NAMESPACE || 'synapse');
+    } catch (vectorErr: any) {
+      console.error(`Failed to delete vectors for file ${file.id}:`, vectorErr);
+      throw new Error(`Failed to delete vector embeddings: ${vectorErr.message || vectorErr}`);
+    }
 
-    // Remove record from database
+    // 2. Remove physical file from storage engine
+    try {
+      await storageProvider.deleteFile(file.path);
+    } catch (storageErr: any) {
+      console.error(`Failed to delete physical storage file for ${file.id}:`, storageErr);
+      throw new Error(`Failed to delete physical storage file: ${storageErr.message || storageErr}`);
+    }
+
+    // 3. Remove record and cascading KnowledgeChunk rows from database
     await prisma.knowledgeFile.delete({
       where: { id: file.id },
     });
   }
+
 
   async getFileContent(id: string, userId: string): Promise<{ file: KnowledgeFile; buffer: Buffer }> {
     const file = await this.getFileById(id, userId);

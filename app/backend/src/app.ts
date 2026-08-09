@@ -9,6 +9,7 @@ import authRouter from './features/auth/auth.routes.js';
 import chatRouter from './features/chat/chat.routes.js';
 import filesRouter from './features/files/files.routes.js';
 import searchRouter from './features/search/search.routes.js';
+import workspaceMemoryRouter from './features/workspace-memory/workspace-memory.routes.js';
 
 const app = express();
 
@@ -24,12 +25,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger);
 
 // Routes
+app.use('/', healthRouter);
 app.use('/api', healthRouter);
 app.use('/api/auth', authRouter);
+
 app.use('/api/chat', chatRouter);
 app.use('/api/files', filesRouter);
 app.use('/api/knowledge', filesRouter);
 app.use('/api/search', searchRouter);
+app.use('/api/memory', workspaceMemoryRouter);
 
 
 // Error handling

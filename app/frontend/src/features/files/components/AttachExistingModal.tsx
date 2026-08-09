@@ -9,7 +9,7 @@ import { formatBytes, getExtensionBadgeProps } from '../utils/fileHelpers';
 interface AttachExistingModalProps {
   conversationId: string | null;
   onClose: () => void;
-  onAttach: (fileId: string) => Promise<boolean>;
+  onAttach: (fileId: string, filename: string, extension: string) => Promise<boolean>;
 }
 
 export const AttachExistingModal: React.FC<AttachExistingModalProps> = ({
@@ -49,13 +49,13 @@ export const AttachExistingModal: React.FC<AttachExistingModalProps> = ({
     f.filename.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleAttachClick = async (fileId: string) => {
-    setAttachingId(fileId);
+  const handleAttachClick = async (file: AvailableKnowledgeFile) => {
+    setAttachingId(file.id);
     try {
-      const success = await onAttach(fileId);
+      const success = await onAttach(file.id, file.filename, file.extension);
       if (success) {
         setFiles((prev) =>
-          prev.map((f) => (f.id === fileId ? { ...f, isAttached: true } : f))
+          prev.map((f) => (f.id === file.id ? { ...f, isAttached: true } : f))
         );
       }
     } finally {
@@ -140,7 +140,7 @@ export const AttachExistingModal: React.FC<AttachExistingModalProps> = ({
                   <Button
                     size="sm"
                     disabled={isAttached || isAttaching}
-                    onClick={() => handleAttachClick(file.id)}
+                    onClick={() => handleAttachClick(file)}
                     className={`text-xs gap-1.5 shrink-0 rounded-xl transition-all ${
                       isAttached
                         ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 cursor-default'

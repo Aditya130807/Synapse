@@ -26,6 +26,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
+interface ComposerAttachment {
+  fileId: string;
+  filename: string;
+  extension: string;
+  source: 'uploaded' | 'existing';
+}
+
 export const MessageComposer: React.FC = () => {
   const {
     sendMessage,
@@ -33,13 +40,12 @@ export const MessageComposer: React.FC = () => {
     isStreaming,
     cancelGeneration,
     selectedConversationId,
-    attachedFiles,
     uploadAndAttachFile,
     attachExistingFile,
-    detachFile,
   } = useChat();
 
   const [content, setContent] = useState('');
+  const [composerFiles, setComposerFiles] = useState<ComposerAttachment[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
@@ -72,9 +78,8 @@ export const MessageComposer: React.FC = () => {
     setTimeout(() => setToastNotice(null), 5000);
   };
 
-  // Process file upload with client-side validation and immediate error reset
+  // Process file upload with client-side validation
   const handleProcessUpload = async (file: File) => {
-    // 1. Client-side validation before making API request
     const validation = validateUploadFile(file);
     if (!validation.isValid) {
       showToast(`❌ ${validation.error}`, true);
@@ -93,10 +98,18 @@ export const MessageComposer: React.FC = () => {
         setUploadProgress(progress);
       });
 
-      if (res?.message) {
-        showToast(res.message);
-      } else if (res?.attached) {
-        showToast(`Attached ${file.name} to conversation`);
+      if (res?.fileId) {
+        const ext = file.name.split('.').pop() || 'txt';
+        setComposerFiles((prev) => [
+          ...prev.filter((f) => f.fileId !== res.fileId),
+          {
+            fileId: res.fileId!,
+            filename: file.name,
+            extension: ext,
+            source: 'uploaded',
+          },
+        ]);
+        showToast(`Attached ${file.name} to message`);
       }
     } catch (err: any) {
       console.error('File upload failed:', err);
@@ -119,12 +132,36 @@ export const MessageComposer: React.FC = () => {
     }
   };
 
+  // Handle Ctrl+V paste files
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item && item.kind === 'file') {
+        const file = item.getAsFile();
+        if (file) {
+          e.preventDefault();
+          handleProcessUpload(file);
+        }
+      }
+    }
+
+  };
+
   // Handle send message
   const handleSend = () => {
-    if (!content.trim() || isGenerating || isUploading) return;
+    if ((!content.trim() && composerFiles.length === 0) || isGenerating || isUploading) return;
     const textToSend = content;
+    const fileIds = composerFiles.map((f) => f.fileId);
+    const attachmentSources = Object.fromEntries(composerFiles.map((f) => [f.fileId, f.source]));
+    const filesMeta = composerFiles.map((f) => ({ fileId: f.fileId, filename: f.filename, extension: f.extension }));
+
     setContent('');
-    sendMessage(textToSend);
+    setComposerFiles([]);
+
+    sendMessage(textToSend, fileIds, attachmentSources, filesMeta);
   };
 
   // Keyboard shortcut handlers
@@ -165,6 +202,9 @@ export const MessageComposer: React.FC = () => {
     }
   };
 
+  const removeComposerFile = (fileId: string) => {
+    setComposerFiles((prev) => prev.filter((f) => f.fileId !== fileId));
+  };
 
   const getFileIcon = (ext: string) => {
     switch (ext.toLowerCase()) {
@@ -198,7 +238,7 @@ export const MessageComposer: React.FC = () => {
       {isDragging && (
         <div className="absolute inset-x-4 inset-y-0 z-30 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-blue-500 bg-[#090D16]/95 backdrop-blur-md transition-all animate-in fade-in duration-150 p-6 text-center space-y-1">
           <Upload className="h-8 w-8 text-blue-400 animate-bounce mb-1" />
-          <p className="text-sm font-semibold text-white">Drop file to attach</p>
+          <p className="text-sm font-semibold text-white">Drop file to attach to prompt</p>
           <p className="text-xs text-slate-300">Supported: PDF • Markdown • TXT • DOCX</p>
           <p className="text-[11px] text-amber-400 font-medium">Maximum file size: 20 MB</p>
         </div>
@@ -232,51 +272,51 @@ export const MessageComposer: React.FC = () => {
           </div>
         )}
 
-        {/* Attached Files Chips Bar */}
-        {(attachedFiles.length > 0 || isUploading) && (
-          <div className="flex flex-wrap items-center gap-2 px-1 pb-1">
-            {attachedFiles.map((att) => {
-              const fileObj = att.file;
-              if (!fileObj) return null;
-
-              return (
+        {/* Composer Attached Files Chips Bar */}
+        {(composerFiles.length > 0 || isUploading) && (
+          <div className="flex flex-col space-y-1.5 px-1 pb-1">
+            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-blue-400">
+              <Sparkles className="h-3 w-3 text-blue-400" />
+              <span>Prompt Context Attachments ({composerFiles.length})</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {composerFiles.map((f) => (
                 <div
-                  key={att.id || att.fileId}
+                  key={f.fileId}
                   className="group flex items-center gap-2 px-2.5 py-1.5 rounded-xl border border-blue-500/25 bg-[#0F172A]/90 backdrop-blur-md text-xs text-slate-200 shadow-sm transition-all hover:border-blue-500/50"
                 >
                   <div className="flex items-center gap-1.5 truncate max-w-[180px]">
-                    {getFileIcon(fileObj.extension)}
-                    <span className="font-medium text-slate-200 truncate" title={fileObj.filename}>
-                      {fileObj.filename}
+                    {getFileIcon(f.extension)}
+                    <span className="font-medium text-slate-200 truncate" title={f.filename}>
+                      {f.filename}
                     </span>
                   </div>
 
-                  {/* Future-proof attachment badge */}
                   <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded border border-blue-500/20">
                     <CheckCircle2 className="h-2.5 w-2.5 text-blue-400" />
-                    <span>Context Ready</span>
+                    <span>Attached</span>
                   </span>
 
                   <button
                     type="button"
-                    onClick={() => detachFile(att.fileId || fileObj.id)}
+                    onClick={() => removeComposerFile(f.fileId)}
                     className="text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 p-0.5 rounded-lg transition-colors cursor-pointer ml-0.5"
-                    title="Detach from conversation"
+                    title="Remove attachment"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
-              );
-            })}
+              ))}
 
-            {/* Active Uploading Indicator Chip */}
-            {isUploading && (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-xs text-amber-300 animate-pulse">
-                <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-400" />
-                <span className="font-medium truncate max-w-[140px]">{uploadingFileName}</span>
-                <span className="font-mono text-[11px] text-amber-400">{uploadProgress}%</span>
-              </div>
-            )}
+              {/* Active Uploading Indicator Chip */}
+              {isUploading && (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-xs text-amber-300 animate-pulse">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-400" />
+                  <span className="font-medium truncate max-w-[140px]">{uploadingFileName}</span>
+                  <span className="font-mono text-[11px] text-amber-400">{uploadProgress}%</span>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -317,7 +357,7 @@ export const MessageComposer: React.FC = () => {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Hidden Native File Input with explicit accept attribute */}
+          {/* Hidden Native File Input */}
           <input
             ref={fileInputRef}
             type="file"
@@ -326,13 +366,13 @@ export const MessageComposer: React.FC = () => {
             onChange={handleFileChange}
           />
 
-
-          {/* Auto-Resizing Growing Textarea */}
+          {/* Auto-Resizing Textarea with Paste Handler */}
           <textarea
             ref={textareaRef}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
             placeholder={placeholderText}
             rows={1}
             className="flex-1 bg-transparent text-xs sm:text-sm text-[#F8FAFC] placeholder-slate-400/60 focus:outline-none resize-none py-1.5 px-1 font-normal leading-relaxed max-h-[220px]"
@@ -358,9 +398,9 @@ export const MessageComposer: React.FC = () => {
             <button
               type="button"
               onClick={handleSend}
-              disabled={!content.trim() || isUploading}
+              disabled={(!content.trim() && composerFiles.length === 0) || isUploading}
               className={`flex h-9 w-9 items-center justify-center rounded-xl font-medium transition-all duration-200 shrink-0 ${
-                content.trim() && !isUploading
+                (content.trim() || composerFiles.length > 0) && !isUploading
                   ? 'bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-[0_0_18px_rgba(59,130,246,0.4)] hover:shadow-[0_0_24px_rgba(59,130,246,0.6)] hover:scale-105 active:scale-95 cursor-pointer'
                   : 'bg-white/[0.04] text-slate-500 border border-white/[0.04] cursor-not-allowed'
               }`}
@@ -377,10 +417,19 @@ export const MessageComposer: React.FC = () => {
         <AttachExistingModal
           conversationId={selectedConversationId}
           onClose={() => setShowAttachModal(false)}
-          onAttach={async (fileId) => {
+          onAttach={async (fileId, filename, extension) => {
             const ok = await attachExistingFile(fileId);
             if (ok) {
-              showToast('Document attached to conversation');
+              setComposerFiles((prev) => [
+                ...prev.filter((f) => f.fileId !== fileId),
+                {
+                  fileId,
+                  filename,
+                  extension,
+                  source: 'existing',
+                },
+              ]);
+              showToast(`Attached ${filename} to message`);
             }
             return ok;
           }}

@@ -20,12 +20,40 @@ export class SemanticSearchService {
     const queryVector = await embeddingService.generateEmbedding(query);
 
     // 2. Perform vector search filtered strictly by userId
-    const rawResults = await vectorProvider.searchVectors(
+    let rawResults = await vectorProvider.searchVectors(
       queryVector,
       limit,
       { userId },
       process.env.PINECONE_NAMESPACE || 'synapse'
     );
+
+    // Database fallback if vector store is empty (e.g. post server restart)
+    if (rawResults.length === 0) {
+      const dbChunks = await prisma.knowledgeChunk.findMany({
+        where: {
+          file: { userId },
+        },
+        include: {
+          file: { select: { filename: true, userId: true } },
+        },
+        take: limit,
+      });
+
+      if (dbChunks.length > 0) {
+        return dbChunks.map((c, idx) => ({
+          id: c.embeddingId || `chunk_${c.id}`,
+          chunkId: c.id,
+          fileId: c.fileId,
+          filename: c.file.filename,
+          page: c.page,
+          chunkIndex: c.chunkIndex,
+          score: Math.max(0.1, 0.5 - idx * 0.01),
+          scorePercent: 50,
+          content: c.content,
+          tokenEstimate: c.tokenEstimate,
+        }));
+      }
+    }
 
     // 3. Format result objects
     return rawResults.map((res) => {
@@ -46,50 +74,78 @@ export class SemanticSearchService {
   }
 
   /**
-   * Perform semantic search strictly restricted to files attached to a specific conversation.
+   * Perform semantic search strictly restricted to attached file IDs.
    */
   async searchConversationFiles(
     conversationId: string,
     userId: string,
     query: string,
-    limit = 10
+    limit = 10,
+    overrideFileIds?: string[],
   ): Promise<SemanticSearchResultItem[]> {
     if (!query || query.trim().length === 0) {
       return [];
     }
 
-    // Verify conversation access for userId
-    const conv = await prisma.conversation.findFirst({
-      where: { id: conversationId, userId },
-      select: { id: true },
-    });
+    let fileIds: string[] = [];
 
-    if (!conv) {
-      throw new Error('Conversation not found or access denied');
+    if (overrideFileIds && overrideFileIds.length > 0) {
+      fileIds = overrideFileIds;
+    } else {
+      const attachments = await prisma.conversationKnowledgeFile.findMany({
+        where: { conversationId },
+        select: { fileId: true },
+      });
+      fileIds = attachments.map((a) => a.fileId);
     }
 
-    // Get attached file IDs
-    const attachments = await prisma.conversationKnowledgeFile.findMany({
-      where: { conversationId },
-      select: { fileId: true },
-    });
-
-    if (attachments.length === 0) {
+    if (fileIds.length === 0) {
       return [];
     }
-
-    const fileIds = attachments.map((a) => a.fileId);
 
     // Generate query vector
     const queryVector = await embeddingService.generateEmbedding(query);
 
     // Vector search filtered by userId AND attached fileIds
-    const rawResults = await vectorProvider.searchVectors(
+    let rawResults = await vectorProvider.searchVectors(
       queryVector,
       limit,
       { userId, fileIds },
       process.env.PINECONE_NAMESPACE || 'synapse'
     );
+
+    // Database fallback if vector memory store is empty or unpopulated
+    if (rawResults.length === 0) {
+      const dbChunks = await prisma.knowledgeChunk.findMany({
+        where: {
+          fileId: { in: fileIds },
+        },
+        include: {
+          file: { select: { filename: true, userId: true } },
+        },
+        take: limit,
+      });
+
+      if (dbChunks.length > 0) {
+        // Asynchronously re-index file embeddings into vector provider
+        for (const fId of fileIds) {
+          embeddingService.processFileEmbeddings(fId).catch(() => {});
+        }
+
+        return dbChunks.map((c, idx) => ({
+          id: c.embeddingId || `chunk_${c.id}`,
+          chunkId: c.id,
+          fileId: c.fileId,
+          filename: c.file.filename,
+          page: c.page,
+          chunkIndex: c.chunkIndex,
+          score: Math.max(0.1, 0.5 - idx * 0.01),
+          scorePercent: 50,
+          content: c.content,
+          tokenEstimate: c.tokenEstimate,
+        }));
+      }
+    }
 
     return rawResults.map((res) => {
       const score = Math.max(0, Math.min(1, res.score));

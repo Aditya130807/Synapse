@@ -1,6 +1,14 @@
 import api from '@/lib/api';
 import type { Conversation, Message, MessageRole } from '../chat.types';
 
+const TOKEN_KEY = 'synapse_token';
+const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/$/, '');
+
+function getAuthToken(): string {
+  return localStorage.getItem(TOKEN_KEY) || localStorage.getItem('token') || '';
+}
+
+
 export const chatService = {
   async getConversations(): Promise<Conversation[]> {
     const response = await api.get<{ conversations: Conversation[] }>('/chat');
@@ -51,12 +59,16 @@ export const chatService = {
   async sendUserMessage(
     conversationId: string,
     content: string,
+    fileIds?: string[],
+    attachmentSources?: Record<string, string>,
   ): Promise<{ userMessage: Message; assistantMessage: Message }> {
     const response = await api.post<{ userMessage: Message; assistantMessage: Message }>(
       `/chat/${conversationId}/messages`,
       {
         role: 'user' as MessageRole,
         content,
+        fileIds,
+        attachmentSources,
       },
     );
     return response.data;
@@ -68,9 +80,11 @@ export const chatService = {
     onChunk: (chunk: string) => void,
     onUserMessage?: (userMessage: Message) => void,
     signal?: AbortSignal,
+    fileIds?: string[],
+    attachmentSources?: Record<string, string>,
   ): Promise<{ assistantMessage: Message | null }> {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`/api/chat/${conversationId}/messages/stream`, {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/chat/${conversationId}/messages/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -79,9 +93,13 @@ export const chatService = {
       body: JSON.stringify({
         role: 'user',
         content,
+        fileIds,
+        attachmentSources,
       }),
       signal,
     });
+
+
 
     if (!response.ok) {
       let message = 'Streaming failed';
@@ -121,23 +139,23 @@ export const chatService = {
         if (!trimmed || !trimmed.startsWith('data: ')) continue;
 
         const jsonStr = trimmed.slice(6).trim();
+        let event: any;
         try {
-          const event = JSON.parse(jsonStr);
-          if (event.type === 'userMessage' && onUserMessage) {
-            onUserMessage(event.userMessage);
-          } else if (event.type === 'token') {
-            onChunk(event.content);
-          } else if (event.type === 'done') {
-            finalAssistantMessage = event.assistantMessage;
-          } else if (event.type === 'error') {
-            throw new Error(event.message || 'Stream error');
-          }
-        } catch (e: unknown) {
-          const errObj = e as { message?: string };
-          if (errObj.message && !errObj.message.includes('JSON')) {
-            throw e;
-          }
+          event = JSON.parse(jsonStr);
+        } catch {
+          continue;
         }
+
+        if (event.type === 'userMessage' && onUserMessage) {
+          onUserMessage(event.userMessage);
+        } else if (event.type === 'token') {
+          onChunk(event.content);
+        } else if (event.type === 'done') {
+          finalAssistantMessage = event.assistantMessage;
+        } else if (event.type === 'error') {
+          throw new Error(event.message || 'Stream error');
+        }
+
       }
     }
 
@@ -149,8 +167,8 @@ export const chatService = {
     onChunk: (chunk: string) => void,
     signal?: AbortSignal,
   ): Promise<{ assistantMessage: Message | null }> {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`/api/chat/${conversationId}/messages/regenerate`, {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/chat/${conversationId}/messages/regenerate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -158,6 +176,7 @@ export const chatService = {
       },
       signal,
     });
+
 
     if (!response.ok) {
       let message = 'Regeneration failed';
@@ -197,21 +216,21 @@ export const chatService = {
         if (!trimmed || !trimmed.startsWith('data: ')) continue;
 
         const jsonStr = trimmed.slice(6).trim();
+        let event: any;
         try {
-          const event = JSON.parse(jsonStr);
-          if (event.type === 'token') {
-            onChunk(event.content);
-          } else if (event.type === 'done') {
-            finalAssistantMessage = event.assistantMessage;
-          } else if (event.type === 'error') {
-            throw new Error(event.message || 'Stream error');
-          }
-        } catch (e: unknown) {
-          const errObj = e as { message?: string };
-          if (errObj.message && !errObj.message.includes('JSON')) {
-            throw e;
-          }
+          event = JSON.parse(jsonStr);
+        } catch {
+          continue;
         }
+
+        if (event.type === 'token') {
+          onChunk(event.content);
+        } else if (event.type === 'done') {
+          finalAssistantMessage = event.assistantMessage;
+        } else if (event.type === 'error') {
+          throw new Error(event.message || 'Stream error');
+        }
+
       }
     }
 

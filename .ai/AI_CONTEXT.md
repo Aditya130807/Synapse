@@ -10,7 +10,7 @@ Every AI agent must read this file before making changes and update it after com
 
 **Project Stage**
 
-Sprint 7.5 Complete: Embeddings & Semantic Search Foundation (Score: 10/10)
+Sprint 10 Complete: Multi-Agent Foundation & Orchestration
 
 **Current Branch**
 
@@ -18,7 +18,163 @@ main
 
 **Current Focus**
 
-Ready for Sprint 8: RAG & AI Context Injection — retrieving relevant document vector chunks, formatting context windows, system prompt injection, and citations in AI responses.
+Sprint 10 Complete. Implemented extensible Multi-Agent foundation & orchestration layer (`Agent`, `AgentContext`, `AgentResult`, `AgentRegistry`, `AgentRouter`, `AgentOrchestrator`, `GeneralAgent`, `ToolRegistry`, `AgentExecutionMeta`). 100% backward compatible with Sprints 1–9.1. Ready for Sprint 11.
+
+---
+
+## Architecture: Dual-Scope Memory & Context Control (Sprint 9 + 9.1 — AUTHORITATIVE)
+
+### Memory Scopes
+1. **Conversation Memory (`ConversationMemory`)**: Scoped to a single conversation. Stores conversation facts, summaries, preferences, decisions, goals. Types: `'summary' | 'preference' | 'fact' | 'decision' | 'goal'`. Supports pinning.
+2. **Workspace Memory (`WorkspaceMemory`)**: Scoped to a user, persistent across ALL conversations. Stores durable project facts, preferences, decisions, goals. Types: `'fact' | 'preference' | 'decision' | 'goal'`. No summaries (those stay conversation-scoped). Auto-promoted from conversation memory when extraction confidence >= 0.8.
+
+### Memory Layer vs. RAG Layer
+- **Memory Layer** (`ConversationMemory` + `WorkspaceMemory`): Stores durable facts, preferences, decisions, and goals. Memory does NOT retrieve document chunks or force citations.
+- **RAG Layer (`KnowledgeChunk` & Vector Store)**: Retrieves document chunks from attached `KnowledgeFile` records. RAG remains strictly separate from Memory.
+
+### Context Priority Pipeline
+```
+User sends message
+  ↓
+ContextEngine.execute(conversationId, userId, query, messageFileIds)
+  ↓
+  1. Fetch relevant Workspace Memories (keyword-scored, user-scoped, cross-conversation)
+  2. Fetch active Conversation Memories (Pinned & High-Importance)
+  3. Evaluate Current Message Attachments (Priority 1 — Attached Document Mode)
+  4. Evaluate Explicit Prior Context References (Priority 2 — Prior Files)
+  5. Compute Context Budget (Max 8,000 tokens)
+  6. Format System Prompt:
+       System Instructions +
+       [ACTIVE MEMORIES — WORKSPACE + CONVERSATION with scope labels] +
+       [RETRIEVED KNOWLEDGE CONTEXT] (if attachments/RAG present)
+  ↓
+PromptBuilder → System Prompt & User Query
+  ↓
+AI Provider (streaming or sync)
+  ↓
+Response saved → Async Memory Extractor:
+  - Save to Conversation Memory (always)
+  - Promote to Workspace Memory (importance >= 0.8, not summaries)
+```
+
+### Conversation Memory API Endpoints
+- `GET /api/chat/:id/memory` — List memories for conversation (scoped to user)
+- `POST /api/chat/:id/memory` — Create manual memory
+- `PATCH /api/chat/:id/memory/:memoryId` — Update memory (content, type, importance, isPinned)
+- `DELETE /api/chat/:id/memory/:memoryId` — Delete memory
+
+### Workspace Memory API Endpoints
+- `GET /api/memory` — List all workspace memories for authenticated user
+- `POST /api/memory` — Create workspace memory (content, type?, importance?)
+- `GET /api/memory/:memoryId` — Get single workspace memory
+- `PATCH /api/memory/:memoryId` — Update workspace memory
+- `DELETE /api/memory/:memoryId` — Delete workspace memory
+
+### Workspace Memory Key Files
+- `src/features/workspace-memory/workspace-memory.types.ts` — DTOs and input types
+- `src/features/workspace-memory/workspace-memory.service.ts` — CRUD, dedup, keyword relevance scoring
+- `src/features/workspace-memory/workspace-memory.controller.ts` — Express handlers (userId from `req.user!.sub`)
+- `src/features/workspace-memory/workspace-memory.routes.ts` — Route registration
+- Frontend: `WorkspaceMemoryPanel.tsx`, `workspace-memory.api.ts`
+
+---
+
+## Architecture: Multi-Agent Foundation & Orchestration (Sprint 10 — AUTHORITATIVE)
+
+### Orchestration Pipeline
+```
+Chat Controller (`chat.controller.ts`)
+  ↓
+`ai.service.ts` (`generateAIResponse` / `generateStreamAIResponse`)
+  ↓
+`AgentOrchestrator` (`src/features/agents/agent.orchestrator.ts`)
+  ↓
+  1. Verify User & Conversation Ownership
+  2. Assemble Context via `ContextEngine.execute()` (Retrieval, Workspace Memory, Scope)
+  3. Query `AgentRouter.route(agentContext)` (Deterministic O(1) selection)
+  4. Lookup Target Agent from `AgentRegistry.get(agentId)`
+  5. Record Execution Trace Steps (`request.received`, `context.assembled`, `agent.selected`, `agent.executed`)
+  6. Execute Agent (`agent.execute(context, options)`)
+  7. Persist Assistant Message in DB with `strategyMeta` + `agentMeta`
+  8. Asynchronously Extract Memories (`extractMemoriesAsync`)
+  ↓
+Return Assistant `MessageDTO` (or stream tokens via SSE)
+```
+
+### Core Abstractions
+- **`Agent` Interface** (`src/features/agents/agent.types.ts`): Defines `id`, `name`, `description`, `capabilities`, `canHandle(context)`, and `execute(context, options)`.
+- **`AgentRegistry`** (`src/features/agents/agent.registry.ts`): Extensible singleton registry supporting O(1) agent registration, lookup, and listing. Rejects duplicate agent IDs.
+- **`AgentRouter`** (`src/features/agents/agent.router.ts`): Evaluates requests and context against capability checks. In Sprint 10, routes deterministically to `general` without extra LLM latency.
+- **`AgentOrchestrator`** (`src/features/agents/agent.orchestrator.ts`): Coordinates Context Engine → Router → Registry → Agent Execution → Trace Recording → Message Persistence.
+- **`GeneralAgent`** (`src/features/agents/general.agent.ts`): Production agent encapsulating default Synapse AI generation, streaming, system prompts, and citations.
+- **`ToolRegistry`** (`src/features/agents/tools/tool.registry.ts`): Permission-aware tool registry for user-scoped capability validation.
+
+### Capability & Permission Model
+- `AgentCapability`: `'conversation.read' | 'knowledge.read' | 'memory.read' | 'memory.write' | 'tools.execute' | 'web.search' | 'code.execute'`
+- `GeneralAgent` Capabilities: `['conversation.read', 'knowledge.read', 'memory.read', 'memory.write']`
+
+### Key Multi-Agent Files
+- `src/features/agents/agent.types.ts` — Core interfaces (`Agent`, `AgentContext`, `AgentResult`, `AgentExecutionMeta`)
+- `src/features/agents/agent.registry.ts` — AgentRegistry singleton
+- `src/features/agents/agent.router.ts` — AgentRouter service
+- `src/features/agents/agent.orchestrator.ts` — AgentOrchestrator coordinator
+- `src/features/agents/general.agent.ts` — GeneralAgent implementation
+- `src/features/agents/tools/tool.types.ts` & `tool.registry.ts` — Tool foundation
+- `src/features/agents/index.ts` — Module exports & auto-registration
+- Frontend: `ChatHeader.tsx` (Agent Indicator badge), `CitationsList.tsx` (Inspector Agent section)
+
+---
+
+## Architecture: Chat AI Pipeline (Post Sprint 8.5 — AUTHORITATIVE)
+
+### Context Routing (3 Priority Levels)
+
+```
+User sends message
+  ↓
+ContextEngine.execute(conversationId, userId, query, messageFileIds)
+  ↓
+  if messageFileIds.length > 0:
+    → Priority 1: Attached Document Mode (exclusive scope)
+    → Only expand to conversation files if user explicitly references prior context
+  else if referencesPriorContext && conversationFileIds.length > 0:
+    → Priority 2: Prior Context Mode (semantic search over conversation files)
+  else:
+    → Priority 0: Normal AI (no retrieval, clean system prompt)
+  ↓
+PromptBuilder → systemPrompt (RAG or clean fallback)
+  ↓
+AI Provider (streaming or sync)
+  ↓
+createMessage persists with metadata + citations
+```
+
+### Message Attachment Lifecycle
+```
+Composer uploads/selects file
+  ↓
+composerFiles[] stores { fileId, filename, extension, source }
+  ↓
+On send: fileIds[] + attachmentSources{} + filesMeta[] → sendMessage()
+  ↓
+Optimistic tempUserMessage.attachments populated from filesMeta (immediate display)
+  ↓
+POST /api/chat/:id/messages/stream { role, content, fileIds, attachmentSources }
+  ↓ (Zod validates and passes through fileIds/attachmentSources)
+  ↓
+chatService.createMessage() → MessageKnowledgeFile records created
+  ↓
+SSE sends userMessage event → real server message replaces temp (with confirmed attachments)
+  ↓
+ContextEngine reads message.attachments for fileIds → runs correct retrieval
+```
+
+### Key Invariants
+- Normal questions (no files): No retrieval. Direct AI generation.
+- Current message attachments: Exclusive scope. Prior files NOT searched.
+- Prior context: ONLY retrieved when prompt explicitly references it (keywords: 'earlier', 'previous', 'uploaded', etc.)
+- retrievalService.retrieveRelevantChunks(): Trusts caller's fileIds. Does NOT fetch conversation files internally.
+- createMessageSchema: Includes fileIds[] and attachmentSources{} (were missing, causing silent RAG failure).
 
 
 ---
@@ -52,6 +208,30 @@ Ready for Sprint 8: RAG & AI Context Injection — retrieving relevant document 
 * Sprint 7: Document Processing & RAG Foundation (Phase 1) — Asynchronous document processing pipeline (`features/document-processing/`), `KnowledgeChunk` Prisma model (`fileId`, `chunkIndex`, `page`, `content`, `tokenEstimate`), `DocumentParser` abstraction (`PdfParser` supporting both `pdf-parse` v2+ `PDFParse` constructor and v1 default function exports with enhanced `PDF parser failed: <reason>` error reporting, `DocxParser` using `mammoth`, `MarkdownParser`, `TxtParser`), `TextNormalizer` (`\r\n` -> `\n`, whitespace & paragraph break cleanup), `SemanticChunker` (600-1000 char target, 100-150 char overlap window, sentence/paragraph boundary splitting), `MetadataExtractor` (token estimates & page counts), `DocumentProcessorService` (`uploaded` → `processing` → `processed`/`failed` lifecycle), async queue (`setImmediate`), frontend status indicators (`Processing` spinner, `Ready` badge), `FileCard` chunk/token count summary, and `FilePreviewModal` dual-tab view ("Raw Preview" & "Parsed Chunks").
 * File Upload UX & Error Handling Improvement — Client-side pre-upload file validation (`files.validation.ts` enforcing 20 MB size limit & PDF/MD/TXT/DOCX extensions), explicit native file picker `accept` attribute (`.pdf,.md,.markdown,.txt,.docx,.doc`), visible upload limit indicators on drag-and-drop overlay & paperclip menu, Multer error handling middleware in Express (`errorHandler.ts` returning structured JSON `{ status: 'error', code: 'LIMIT_FILE_SIZE', message: 'File exceeds the maximum upload size of 20 MB.' }`), immediate loading state & progress cleanup on upload error, and user-friendly error toast banners.
 * Sprint 7.5: Embeddings & Semantic Search Foundation — `VectorProvider` abstraction (`src/lib/vector/vector.interface.ts`, `MemoryVectorProvider` with cosine similarity, `PineconeVectorProvider`, `VectorProviderFactory`), `KnowledgeChunk` Prisma model updates (`embeddingId`, `embeddedAt`), `EmbeddingService` (`text-embedding-004` / normalized 384-dimensional feature vector generator, batch processing, chunk index updates), `SemanticSearchService` (`searchKnowledgeBase` with user isolation & `searchConversationFiles` with attachment filtering), REST APIs (`POST /api/search/semantic` and `POST /api/search/conversation`), and frontend Semantic Search UI (`FilesPage` toggle between "Semantic" & "Filename", `SearchResultCard` displaying `% Match` badge, page, filename, and excerpt).
+* Sprint 8: Retrieval-Augmented Generation (RAG) & AI Context Injection — Full RAG module (`features/rag/` with `RetrievalService`, `ContextService`, `PromptBuilder`, `CitationService`, `RAGService`), conversation-scoped & user-scoped chunk retrieval, token budgeting, prompt construction with source citations & anti-hallucination rules, AI response generation integration (`ai.service.ts`), assistant message citations storage, frontend collapsible `CitationsList` UI with source preview modal triggers, developer `RetrievalInspector` modal, and `MessageComposer` RAG knowledge source counter badge.
+* Fix Orphaned Vector Embeddings on File Deletion — Integrated `vectorProvider.deleteByFileId(file.id)` into `FilesService.deleteFile()` before physical storage and database record removal, ensuring transactional deletion order (Delete Vectors → Delete Physical File → Delete DB Record) and updated `MemoryVectorProvider.deleteByFileId` to clean up across all active namespaces.
+* Improve Server-Sent Events (SSE) Error Handling — Wrapped streaming handlers (`createStreamMessageHandler` and `regenerateStreamMessageHandler` in `chat.controller.ts`) with graceful error handling: if a provider throws mid-stream, sends a structured SSE error event (`data: { type: 'error', message }`), flushes response, and closes connection cleanly (`res.end()`), preventing hanging requests or unhandled client state.
+* Harden Local Storage Path Resolution — Integrated `assertInsideStorageRoot(fullPath)` containment guard in `LocalStorageProvider` (`saveFile`, `deleteFile`, `getFileStream`, `getFileBuffer`, `exists`), strictly enforcing path normalization and asserting `normalizedPath.startsWith(storageRoot)` before executing any filesystem operation to prevent path traversal vulnerabilities.
+* Add Application Health Check Endpoint — Created lightweight unauthenticated health check route (`health.ts` mounted at `/health` and `/api/health`) performing non-blocking health checks across Database (`SELECT 1`), Storage, Vector Provider, and AI Provider, returning HTTP 200 `{ status: "ok", timestamp, services }` when healthy or HTTP 503 when degraded.
+* Fix Streaming Endpoint HTTP 404 — Added `/api` proxy configuration pointing to `http://localhost:5000` in `vite.config.ts`, configured `chatService.ts` to use `API_BASE_URL` (`import.meta.env.VITE_API_URL || 'http://localhost:5000/api'`), and updated JWT authorization token retrieval to use `getAuthToken()` (`synapse_token`), resolving 404 Not Found errors on native fetch streaming requests.
+* Debug Sprint 8 RAG Pipeline — Resolved RAG context injection drop for short queries: calibrated `minScoreThreshold` from `0.15` to `0.01` in `retrieval.service.ts` to prevent discarding low-magnitude L2-normalized query-chunk similarity scores, added database fallback rehydration in `semanticSearch.service.ts` for attached files when in-memory vector store is unpopulated post server restart, and added end-to-end RAG retrieval logging (`[RAG Retrieval]`).
+* Sprint 8.1: Dual-Level Knowledge Attachments & Message UX — Built dual-level attachment architecture (`MessageKnowledgeFile` model alongside `ConversationKnowledgeFile`), updated RAG retrieval engine to combine message-attached file IDs + persistent conversation file IDs (`retrievalService.retrieveRelevantChunks`), added `sourceOrigin` tagging (`Message Attachment` vs `Conversation Context`) rendered in `CitationsList` Retrieval Inspector, redesigned `MessageComposer` with multi-file chip bar, drag & drop overlay, `Ctrl+V` clipboard file paste handler, automatic composer clearing on message send, and rendered attached file chips in user message bubbles (`MessageBubble.tsx`).
+* Sprint 8.2: Intelligent Context Engine & Message-Centric File Workflow — Implemented intent-aware `ContextEngine` (`features/context/context.engine.ts`, `intent.classifier.ts`, `context.strategy.ts`) supporting 4 retrieval strategies (Strategy A: Conversation Mode / Semantic Search, Strategy B: Attached Document Mode / Full Sequential Load, Strategy C: Large Document Mode / Hierarchical Compression, Strategy D: Hybrid Mode / Merged Retrieval), upgraded default token budget to 8,000 tokens, updated `PromptBuilder` with authoritative document system prompt headers, persisted `strategyMeta` in DB message metadata, and redesigned frontend `CitationsList` Retrieval Inspector with strategy badges, loaded target file summaries, and context metrics.
+* Sprint 8.3: Professional Chat Experience & Message Interaction Polish — Upgraded user message attached file chips with file type badges, formatted file sizes (`formatBytes`), click-to-preview (`FilePreviewModal`), hover animations, and `Context Ready` badges. Configured `ReactMarkdown` with `rehype-raw`, `rehype-sanitize`, and `rehype-highlight` for sanitized rich HTML/Markdown rendering. Redesigned Assistant message cards with dark glassmorphic styling, enhanced typography, and action buttons. Enforced message edit locking: only the latest user message (`isLatestUserMessage`) presents the `Edit` button, locking historical user prompts.
+* Fix Assistant Message Double-Bubble UI — Refactored `MessageBubble.tsx` to eliminate the nested inner response container (`bg-[#020617]/90 border...`) for Assistant responses. Content now renders directly inside the single unified assistant card container (`bg-[#0B0F19]/90 border border-white/[0.08] rounded-2xl`), matching ChatGPT, Claude, and Cursor layouts while preserving element-specific containers for code blocks, tables, and blockquotes.
+* Sprint 8.4: Intelligent Context Prioritization & Streaming UX Refinement — Implemented 5-level Context Prioritization in `ContextEngine` (`features/context/context.engine.ts`, `intent.classifier.ts`), ensuring current message attachments take exclusive priority and preventing context contamination from prior files unless prompt explicitly references past context (e.g. comparison queries). Updated Retrieval Inspector with prior context usage diagnostics. Refactored streaming UI into a single Assistant message component transitioning smoothly through `Thinking` -> `Streaming` -> `Completed` without duplicate avatars or placeholder cards.
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

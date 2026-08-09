@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, CheckCircle2, Edit2, Check, X, ShieldCheck } from 'lucide-react';
+import { Sparkles, CheckCircle2, Edit2, Check, X, ShieldCheck, Brain } from 'lucide-react';
 import { useChat } from '../context/chatContext';
+import { MemoryPanel } from './MemoryPanel';
+import { WorkspaceMemoryPanel } from './WorkspaceMemoryPanel';
+import { Globe } from 'lucide-react';
 
 export const ChatHeader: React.FC = () => {
   const { selectedConversation, renameConversation } = useChat();
 
   const [isEditing, setIsEditing] = useState(false);
   const [titleInput, setTitleInput] = useState('');
+  const [showMemoryPanel, setShowMemoryPanel] = useState(false);
+  const [showWorkspaceMemoryPanel, setShowWorkspaceMemoryPanel] = useState(false);
 
   useEffect(() => {
     if (selectedConversation) {
@@ -97,6 +102,11 @@ export const ChatHeader: React.FC = () => {
               Active Context
             </span>
             <span className="text-slate-600">•</span>
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-300 text-[10px] font-medium font-mono">
+              <Sparkles className="h-2.5 w-2.5 text-blue-400" />
+              General Agent
+            </span>
+            <span className="text-slate-600">•</span>
             <span className="inline-flex items-center gap-1 text-slate-400">
               <ShieldCheck className="h-3 w-3 text-blue-400" />
               End-to-End Encrypted
@@ -105,8 +115,28 @@ export const ChatHeader: React.FC = () => {
         </div>
       </div>
 
-      {/* Right: OpenRouter Model Badge & Provider Indicator */}
+      {/* Right: Memory Button & OpenRouter Model Badge */}
       <div className="flex items-center gap-2 shrink-0">
+        <button
+          onClick={() => setShowWorkspaceMemoryPanel(true)}
+          className="flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-950/40 hover:bg-emerald-900/50 px-3 py-1.5 text-xs text-emerald-200 shadow-sm transition-all active:scale-95 cursor-pointer font-medium"
+          title="Open Workspace Memory (persistent across conversations)"
+        >
+          <Globe className="h-3.5 w-3.5 text-emerald-400" />
+          <span>Workspace</span>
+        </button>
+
+        {selectedConversation && (
+          <button
+            onClick={() => setShowMemoryPanel(true)}
+            className="flex items-center gap-1.5 rounded-xl border border-indigo-500/30 bg-indigo-950/40 hover:bg-indigo-900/50 px-3 py-1.5 text-xs text-indigo-200 shadow-sm transition-all active:scale-95 cursor-pointer font-medium"
+            title="Open Workspace Memory & Context Control"
+          >
+            <Brain className="h-3.5 w-3.5 text-indigo-400" />
+            <span>Memory</span>
+          </button>
+        )}
+
         <div
           className="flex items-center gap-2 rounded-xl border border-blue-500/30 bg-[#020617]/80 px-3 py-1.5 text-xs text-[#CBD5E1] shadow-inner select-none"
           title="Active Model: OpenRouter (openai/gpt-oss-20b:free)"
@@ -119,6 +149,17 @@ export const ChatHeader: React.FC = () => {
           <span className="text-[10px] text-blue-400 font-mono font-normal">GPT-OSS 20B</span>
         </div>
       </div>
+
+      {showMemoryPanel && selectedConversation && (
+        <MemoryPanel
+          conversationId={selectedConversation.id}
+          onClose={() => setShowMemoryPanel(false)}
+        />
+      )}
+
+      {showWorkspaceMemoryPanel && (
+        <WorkspaceMemoryPanel onClose={() => setShowWorkspaceMemoryPanel(false)} />
+      )}
     </div>
   );
 };
