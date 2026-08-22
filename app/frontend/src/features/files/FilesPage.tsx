@@ -135,10 +135,10 @@ export default function FilesPage() {
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* Page Title Header */}
       <div className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
+        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2.5" style={{ color: 'var(--text-primary)' }}>
           Knowledge Base
         </h1>
-        <p className="text-sm text-slate-400">
+        <p className="text-sm" style={{ color: 'var(--muted)' }}>
           AI Document Library & Semantic Retrieval Engine. Manage files and search extracted vector chunks.
         </p>
       </div>
@@ -151,7 +151,7 @@ export default function FilesPage() {
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
         <div className="flex items-center gap-2 flex-1 max-w-lg">
           <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: 'var(--muted)' }} />
             <Input
               value={searchQuery}
               onChange={handleSearchChange}
@@ -160,37 +160,50 @@ export default function FilesPage() {
                   ? 'Search by meaning, topics, concepts... (e.g. "Global state in React")'
                   : 'Filter by filename...'
               }
-              className="pl-10 pr-4 bg-[#0F172A]/80 border-white/10 text-slate-200 placeholder:text-slate-500 text-xs sm:text-sm rounded-xl focus:border-blue-500 h-10 shadow-sm"
+              className="pl-10 pr-4 text-xs sm:text-sm rounded-xl h-10 shadow-xs focus:ring-1 focus:ring-[var(--primary)]"
+              style={{ backgroundColor: 'var(--input)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
             />
             {isSearchingSemantic && (
-              <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-400 animate-spin" />
+              <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin" style={{ color: 'var(--primary)' }} />
             )}
           </div>
 
           {/* Search Mode Toggle */}
-          <div className="flex items-center bg-[#0F172A]/80 p-1 rounded-xl border border-white/10 text-xs shrink-0">
+          <div className="flex items-center p-1 rounded-xl border text-xs shrink-0" style={{ backgroundColor: 'var(--input)', borderColor: 'var(--border)' }}>
             <button
               type="button"
               onClick={() => setSearchMode('semantic')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all ${
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer font-medium"
+              style={
                 searchMode === 'semantic'
-                  ? 'bg-blue-600 text-white font-medium shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
+                  ? {
+                      backgroundColor: 'var(--primary-muted)',
+                      border: '1px solid var(--primary-border)',
+                      color: 'var(--primary)',
+                      fontWeight: 600,
+                    }
+                  : { color: 'var(--muted)' }
+              }
             >
-              <Sparkles className="h-3.5 w-3.5 text-blue-300" />
+              <Sparkles className="h-3.5 w-3.5" style={{ color: searchMode === 'semantic' ? 'var(--primary)' : 'var(--muted)' }} />
               <span className="hidden sm:inline">Semantic</span>
             </button>
             <button
               type="button"
               onClick={() => setSearchMode('filename')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all ${
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer font-medium"
+              style={
                 searchMode === 'filename'
-                  ? 'bg-blue-600 text-white font-medium shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
+                  ? {
+                      backgroundColor: 'var(--primary-muted)',
+                      border: '1px solid var(--primary-border)',
+                      color: 'var(--primary)',
+                      fontWeight: 600,
+                    }
+                  : { color: 'var(--muted)' }
+              }
             >
-              <SlidersHorizontal className="h-3.5 w-3.5" />
+              <SlidersHorizontal className="h-3.5 w-3.5" style={{ color: searchMode === 'filename' ? 'var(--primary)' : 'var(--muted)' }} />
               <span className="hidden sm:inline">Filename</span>
             </button>
           </div>
@@ -203,18 +216,20 @@ export default function FilesPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 text-xs border-white/10 bg-[#0F172A]/80 text-slate-300 hover:bg-slate-900 rounded-xl h-10 px-4"
+                className="gap-2 text-xs rounded-xl h-10 px-4 cursor-pointer"
+                style={{ backgroundColor: 'var(--input)', borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
               >
-                <ArrowUpDown className="h-3.5 w-3.5 text-slate-400" />
+                <ArrowUpDown className="h-3.5 w-3.5" style={{ color: 'var(--muted)' }} />
                 <span>{sortLabels[sortOrder]}</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44 bg-[#0F172A] border-white/10 text-slate-200">
+            <DropdownMenuContent align="end" className="w-44 border shadow-lg" style={{ backgroundColor: 'var(--dropdown)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
               {Object.entries(sortLabels).map(([key, label]) => (
                 <DropdownMenuItem
                   key={key}
                   onClick={() => setSortOrder(key as FileSort)}
-                  className="text-xs cursor-pointer focus:bg-white/[0.08]"
+                  className="text-xs cursor-pointer"
+                  style={{ color: 'var(--text-primary)' }}
                 >
                   {label}
                 </DropdownMenuItem>
@@ -228,17 +243,17 @@ export default function FilesPage() {
       {searchMode === 'semantic' && searchQuery.trim() ? (
         <div className="space-y-4 pt-2">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-              <Sparkles className="h-3.5 w-3.5 text-blue-400" />
+            <h3 className="text-xs font-semibold uppercase tracking-wider flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+              <Sparkles className="h-3.5 w-3.5" style={{ color: 'var(--primary)' }} />
               Semantic Relevance Results ({semanticResults.length})
             </h3>
-            <span className="text-xs text-slate-500 font-mono">Query: "{searchQuery}"</span>
+            <span className="text-xs font-mono" style={{ color: 'var(--muted)' }}>Query: "{searchQuery}"</span>
           </div>
 
           {isSearchingSemantic ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[1, 2, 3, 4].map((n) => (
-                <Skeleton key={n} className="h-32 rounded-xl bg-slate-900/60 border border-white/[0.06]" />
+                <Skeleton key={n} className="h-32 rounded-xl border" style={{ backgroundColor: 'var(--skeleton)', borderColor: 'var(--border)' }} />
               ))}
             </div>
           ) : semanticResults.length > 0 ? (
@@ -252,11 +267,13 @@ export default function FilesPage() {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-dashed border-white/10 bg-[#080D1A]/50 space-y-3">
-              <Sparkles className="h-8 w-8 text-blue-400/60" />
+            <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-dashed space-y-3" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--empty-bg)' }}>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border" style={{ backgroundColor: 'var(--primary-muted)', borderColor: 'var(--primary-border)', color: 'var(--primary)' }}>
+                <Sparkles className="h-6 w-6" style={{ color: 'var(--primary)' }} />
+              </div>
               <div className="space-y-1 max-w-md">
-                <h4 className="text-sm font-semibold text-slate-200">No semantic matches found</h4>
-                <p className="text-xs text-slate-400">
+                <h4 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>No semantic matches found</h4>
+                <p className="text-xs" style={{ color: 'var(--muted)' }}>
                   Try searching for related concepts, topics, or key ideas in your documents.
                 </p>
               </div>
@@ -269,7 +286,7 @@ export default function FilesPage() {
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[1, 2, 3, 4, 5, 6].map((n) => (
-                <Skeleton key={n} className="h-44 rounded-xl bg-slate-900/60 border border-white/[0.06]" />
+                <Skeleton key={n} className="h-44 rounded-xl border" style={{ backgroundColor: 'var(--skeleton)', borderColor: 'var(--border)' }} />
               ))}
             </div>
           ) : files.length > 0 ? (
@@ -286,13 +303,13 @@ export default function FilesPage() {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center p-16 text-center rounded-2xl border border-dashed border-white/10 bg-[#080D1A]/50 space-y-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400">
-                <Files className="h-6 w-6" />
+            <div className="flex flex-col items-center justify-center p-16 text-center rounded-2xl border border-dashed space-y-4" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--empty-bg)' }}>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border" style={{ backgroundColor: 'var(--primary-muted)', borderColor: 'var(--primary-border)', color: 'var(--primary)' }}>
+                <Files className="h-6 w-6" style={{ color: 'var(--primary)' }} />
               </div>
               <div className="space-y-1.5 max-w-sm">
-                <h3 className="text-base font-semibold text-foreground">No documents in Knowledge Base</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
+                <h3 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>No documents in Knowledge Base</h3>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--muted)' }}>
                   Upload PDF, Markdown, TXT, or DOCX files directly inside AI Chat to automatically extract semantic vector chunks and enable AI context retrieval.
                 </p>
               </div>
@@ -313,21 +330,21 @@ export default function FilesPage() {
 
       {/* Delete Confirmation Dialog */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0F172A] p-6 shadow-2xl space-y-4">
-            <div className="flex items-center gap-3 text-rose-400">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-2xl border p-6 shadow-2xl space-y-4" style={{ backgroundColor: 'var(--modal)', borderColor: 'var(--border)' }}>
+            <div className="flex items-center gap-3 text-rose-500 dark:text-rose-400">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/10 border border-rose-500/20">
                 <Trash2 className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-base font-semibold text-foreground">Delete Document</h3>
-                <p className="text-xs text-slate-400">This action cannot be undone</p>
+                <h3 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>Delete Document</h3>
+                <p className="text-xs" style={{ color: 'var(--muted)' }}>This action cannot be undone</p>
               </div>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed">
+            <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
               Are you sure you want to permanently delete{' '}
-              <span className="font-semibold text-white font-mono">"{deleteTarget.filename}"</span> and all associated vector chunks from your Knowledge Base?
+              <span className="font-semibold font-mono" style={{ color: 'var(--text-primary)' }}>"{deleteTarget.filename}"</span> and all associated vector chunks from your Knowledge Base?
             </p>
 
             <div className="flex items-center justify-end gap-3 pt-2">
@@ -336,7 +353,8 @@ export default function FilesPage() {
                 size="sm"
                 onClick={() => setDeleteTarget(null)}
                 disabled={isDeleting}
-                className="text-xs text-slate-400 hover:text-white rounded-xl"
+                className="text-xs rounded-xl cursor-pointer"
+                style={{ color: 'var(--muted)' }}
               >
                 Cancel
               </Button>
@@ -344,7 +362,7 @@ export default function FilesPage() {
                 size="sm"
                 onClick={handleConfirmDelete}
                 disabled={isDeleting}
-                className="text-xs bg-rose-600 hover:bg-rose-500 text-white rounded-xl gap-1.5 shadow-[0_0_12px_rgba(244,63,94,0.3)]"
+                className="text-xs bg-rose-600 hover:bg-rose-500 text-white rounded-xl gap-1.5 cursor-pointer shadow-sm"
               >
                 {isDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Delete Document'}
               </Button>

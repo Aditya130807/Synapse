@@ -28,6 +28,43 @@ export type MemoryType = 'summary' | 'preference' | 'fact' | 'decision' | 'goal'
 
 export type WorkspaceMemoryType = 'fact' | 'preference' | 'decision' | 'goal';
 
+export type PersistentMemoryScope = 'GLOBAL' | 'WORKSPACE' | 'CONVERSATION';
+
+export type PersistentMemoryType =
+  | 'INSTRUCTION'
+  | 'PREFERENCE'
+  | 'FACT'
+  | 'CONSTRAINT'
+  | 'PROJECT_CONTEXT'
+  | 'SUMMARY';
+
+export type PersistentMemoryStatus = 'ACTIVE' | 'ARCHIVED';
+
+export type PersistentMemoryCategory =
+  | 'workspace_instructions'
+  | 'project_context'
+  | 'user_preferences'
+  | 'technical_preferences'
+  | 'conversation_context';
+
+export interface PersistentMemory {
+  id: string;
+  userId: string;
+  workspaceId: string;
+  conversationId?: string | null;
+  content: string;
+  type: PersistentMemoryType;
+  scope: PersistentMemoryScope;
+  category: PersistentMemoryCategory;
+  priority: number;
+  status: PersistentMemoryStatus;
+  source: 'user_explicit' | 'auto_detected' | 'system';
+  isPinned: boolean;
+  lastUsedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface WorkspaceMemory {
   id: string;
   userId: string;
@@ -56,12 +93,45 @@ export interface AgentExecutionTraceStep {
   details?: Record<string, unknown>;
 }
 
+export interface ToolResult {
+  toolId: string;
+  status: 'success' | 'failed' | 'denied' | 'invalid';
+  data?: unknown;
+  error?: string;
+  durationMs: number;
+}
+
+export interface AgentTask {
+  id: string;
+  agentId: string;
+  objective: string;
+  dependencies?: string[];
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'skipped';
+  result?: string;
+  durationMs?: number;
+  error?: string;
+  toolCalls?: ToolResult[];
+}
+
 export interface AgentExecutionMeta {
   agentId: string;
   agentName: string;
   routingReason: string;
   durationMs: number;
   traceSteps: AgentExecutionTraceStep[];
+  provider?: string;
+  requestedModel?: string;
+  selectedModel?: string;
+  resolvedModel?: string;
+  requestedAgent?: string;
+  executedAgent?: string;
+  fallback?: boolean;
+  emergencyFallback?: boolean;
+  fallbackReason?: string;
+  fallbackAttempts?: number;
+  toolCalls?: ToolResult[];
+  collaborationMode?: 'single' | 'sequential' | 'parallel';
+  tasks?: AgentTask[];
 }
 
 export interface ContextStrategyMeta {

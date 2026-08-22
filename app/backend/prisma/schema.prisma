@@ -40,31 +40,80 @@ enum WorkspaceMemoryType {
   goal
 }
 
+enum PersistentMemoryScope {
+  GLOBAL
+  WORKSPACE
+  CONVERSATION
+}
+
+enum PersistentMemoryType {
+  INSTRUCTION
+  PREFERENCE
+  FACT
+  CONSTRAINT
+  PROJECT_CONTEXT
+  SUMMARY
+}
+
+enum PersistentMemoryStatus {
+  ACTIVE
+  ARCHIVED
+}
+
 model User {
-  id             String          @id @default(cuid())
-  name           String
-  email          String          @unique
-  password       String
-  conversations     Conversation[]
-  knowledgeFiles    KnowledgeFile[]
-  workspaceMemories WorkspaceMemory[]
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  id                 String             @id @default(cuid())
+  name               String
+  email              String             @unique
+  password           String
+  conversations      Conversation[]
+  knowledgeFiles     KnowledgeFile[]
+  workspaceMemories  WorkspaceMemory[]
+  persistentMemories PersistentMemory[]
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 }
 
 model Conversation {
-  id            String                      @id @default(cuid())
-  title         String                      @default("New Conversation")
-  status        ConversationStatus          @default(active)
-  userId        String
-  user          User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  messages      Message[]
-  attachedFiles ConversationKnowledgeFile[]
-  memories      ConversationMemory[]
-  createdAt     DateTime                    @default(now())
-  updatedAt     DateTime                    @updatedAt
+  id                 String                      @id @default(cuid())
+  title              String                      @default("New Conversation")
+  status             ConversationStatus          @default(active)
+  userId             String
+  user               User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages           Message[]
+  attachedFiles      ConversationKnowledgeFile[]
+  memories           ConversationMemory[]
+  persistentMemories PersistentMemory[]
+  createdAt          DateTime                    @default(now())
+  updatedAt          DateTime                    @updatedAt
 
   @@index([userId])
+}
+
+model PersistentMemory {
+  id             String                 @id @default(cuid())
+  userId         String
+  user           User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId    String                 @default("default")
+  conversationId String?
+  conversation   Conversation?          @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  content        String                 @db.Text
+  type           PersistentMemoryType   @default(FACT)
+  scope          PersistentMemoryScope  @default(WORKSPACE)
+  category       String                 @default("workspace_instructions")
+  priority       Int                    @default(5)
+  status         PersistentMemoryStatus @default(ACTIVE)
+  source         String                 @default("user_explicit")
+  isPinned       Boolean                @default(false)
+  lastUsedAt     DateTime?
+
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  @@index([userId])
+  @@index([userId, workspaceId])
+  @@index([userId, scope, status])
+  @@index([conversationId])
 }
 
 model Message {

@@ -1,10 +1,4 @@
 import React from 'react';
-import { BlueGlowBlobs } from './BlueGlowBlobs';
-import { PurpleGlowBlobs } from './PurpleGlowBlobs';
-import { Stars } from './Stars';
-import { OrbitLines } from './OrbitLines';
-import { WaveLines } from './WaveLines';
-import { FloatingParticles } from './FloatingParticles';
 
 interface AnimatedBackgroundProps {
   children?: React.ReactNode;
@@ -16,38 +10,37 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`relative min-h-screen w-full overflow-hidden bg-[#030712] ${className}`}>
-      {/* Layer 1: Deep Radial Gradient */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0B0F19] via-[#030712] to-[#02040A] pointer-events-none" />
-
-      {/* Layer 2: Large Blurred Blue Glow Blobs */}
-      <BlueGlowBlobs />
-
-      {/* Layer 3: Purple Glow Blobs */}
-      <PurpleGlowBlobs />
-
-      {/* Layer 4: Random Stars */}
-      <Stars count={60} />
-
-      {/* Layer 5: SVG Orbital Circles */}
-      <OrbitLines />
-
-      {/* Layer 6: Animated Wave Lines */}
-      <WaveLines />
-
-      {/* Layer 7: Floating Particles */}
-      <FloatingParticles count={30} />
-
-      {/* Layer 8: Noise Texture (2% Opacity, Pure SVG Fractal Noise) */}
+    <div
+      className={`relative min-h-screen w-full overflow-hidden transition-colors duration-200 ${className}`}
+      style={{ backgroundColor: 'var(--background)' }}
+    >
+      {/* Layer 1: Very subtle radial ambient highlight */}
       <div
-        aria-hidden="true"
-        className="absolute inset-0 pointer-events-none z-10 opacity-[0.02] mix-blend-overlay"
+        className="ambient-glow pointer-events-none absolute inset-0 opacity-40"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+          background: 'radial-gradient(circle at 45% 35%, rgba(166, 214, 58, 0.04) 0%, transparent 60%)',
         }}
       />
 
-      {/* Foreground Content Container */}
+      {/* Layer 2: Ultra-subtle Developer Dot Grid Pattern */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.18]"
+        style={{
+          backgroundImage: `radial-gradient(var(--border) 1px, transparent 1px)`,
+          backgroundSize: '24px 24px',
+        }}
+      />
+
+      {/* Layer 3: Faint SVG Orbital Ring Lines for understated depth */}
+      <div className="ambient-glow pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.06]">
+        <svg className="w-[1000px] h-[1000px]" viewBox="0 0 1000 1000" fill="none">
+          <circle cx="500" cy="500" r="420" stroke="var(--primary)" strokeWidth="1" strokeDasharray="6 8" />
+          <circle cx="500" cy="500" r="300" stroke="var(--border-strong)" strokeWidth="1" />
+        </svg>
+      </div>
+
+      {/* Foreground Content */}
       {children && <div className="relative z-20 w-full min-h-screen">{children}</div>}
     </div>
   );

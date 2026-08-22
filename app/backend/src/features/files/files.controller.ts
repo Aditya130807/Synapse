@@ -101,19 +101,26 @@ export async function previewFile(req: Request, res: Response): Promise<void> {
     const { file, buffer } = await filesService.getFileContent(id, userId);
 
     const isText = file.extension === 'txt' || file.extension === 'md' || file.extension === 'markdown';
+    const isJsonRequested = req.query.parsed === 'true' || req.headers.accept?.includes('application/json');
 
-    if (isText || req.query.parsed === 'true') {
+    if (isText || isJsonRequested) {
+      let content = '';
+      if (isText) {
+        content = buffer.toString('utf-8');
+      } else if ((file as any).chunks && (file as any).chunks.length > 0) {
+        content = (file as any).chunks.map((c: any) => c.content).join('\n\n');
+      }
+
       res.json({
         status: 'success',
         data: {
           file,
-          content: buffer.toString('utf-8'),
+          content,
           chunks: (file as any).chunks || [],
         },
       });
       return;
     }
-
 
     // For PDF or DOCX binary previews: return direct file stream with content-type
     res.setHeader('Content-Type', file.mimeType);

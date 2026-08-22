@@ -87,14 +87,14 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
         }}
         className={`group relative flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium cursor-pointer transition-all duration-200 select-none ${
           isActive
-            ? 'bg-[#121A2D] text-white border border-[#3B82F6]/50 shadow-[0_0_18px_rgba(59,130,246,0.18)] font-semibold'
-            : 'text-slate-400 hover:text-slate-100 hover:bg-white/[0.04] border border-transparent'
+            ? 'bg-[var(--nav-active-bg)] text-[var(--text-primary)] border-l-2 border-l-[var(--primary)] border-y border-r border-y-[var(--nav-active-border)] border-r-[var(--nav-active-border)] font-semibold'
+            : 'text-[var(--muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] border border-transparent'
         }`}
       >
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <MessageSquare
             className={`h-4 w-4 shrink-0 transition-colors ${
-              isActive ? 'text-[#3B82F6]' : 'text-[#94A3B8] group-hover:text-[#CBD5E1]'
+              isActive ? 'text-[var(--primary)]' : 'text-[var(--muted)] group-hover:text-[var(--text-primary)]'
             }`}
           />
 
@@ -108,11 +108,11 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
                 onKeyDown={handleKeyDown}
                 onBlur={handleRenameSubmit}
                 autoFocus
-                className="w-full bg-[#020617] border border-[#3B82F6]/60 rounded px-2 py-0.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#3B82F6]"
+                className="w-full bg-[var(--input)] border border-[var(--primary)] rounded px-2 py-0.5 text-xs text-[var(--text-primary)] focus:outline-none"
               />
               <button
                 onClick={handleRenameSubmit}
-                className="p-1 text-emerald-400 hover:text-emerald-300 transition-colors"
+                className="p-1 text-emerald-500 hover:text-emerald-400 transition-colors"
                 title="Save title"
               >
                 <Check className="h-3.5 w-3.5" />
@@ -122,7 +122,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
                   setTitleInput(conversation.title);
                   setIsEditing(false);
                 }}
-                className="p-1 text-[#94A3B8] hover:text-white transition-colors"
+                className="p-1 text-[var(--muted)] hover:text-[var(--text-primary)] transition-colors"
                 title="Cancel"
               >
                 <X className="h-3.5 w-3.5" />
@@ -130,15 +130,15 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
             </div>
           ) : (
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="truncate text-[13px] leading-tight text-[#F8FAFC]">
+              <span className="truncate text-[13px] leading-tight text-[var(--text-primary)]">
                 {conversation.title}
               </span>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-[10px] text-[#94A3B8]/70 font-normal">
+                <span className="text-[10px] text-[var(--muted)] opacity-70 font-normal">
                   {formatRelativeTime(conversation.updatedAt)}
                 </span>
                 {copiedLink && (
-                  <span className="text-[10px] text-emerald-400 font-medium">Link copied!</span>
+                  <span className="text-[10px] text-[var(--primary)] font-medium">Link copied!</span>
                 )}
               </div>
             </div>
@@ -157,8 +157,8 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
               onClick={() => setShowMenu((prev) => !prev)}
               className={`p-1 rounded-lg transition-all ${
                 showMenu || isActive
-                  ? 'opacity-100 text-slate-200 hover:bg-white/10'
-                  : 'opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white hover:bg-white/10'
+                  ? 'opacity-100 text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'
+                  : 'opacity-0 group-hover:opacity-100 text-[var(--muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'
               }`}
               title="More actions"
             >
@@ -167,34 +167,34 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
 
             {/* Dropdown Menu */}
             {showMenu && (
-              <div className="absolute right-0 top-full mt-1 z-30 w-36 rounded-xl border border-white/10 bg-[#0B0F17] p-1.5 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-100">
+              <div className="absolute right-0 top-full mt-1 z-30 w-36 rounded-xl border border-[var(--border)] bg-[var(--dropdown)] p-1.5 shadow-xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-100">
                 <button
                   onClick={() => {
                     setShowMenu(false);
                     setTitleInput(conversation.title);
                     setIsEditing(true);
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
                 >
-                  <Edit2 className="h-3.5 w-3.5 text-blue-400" />
+                  <Edit2 className="h-3.5 w-3.5 text-[var(--primary)]" />
                   <span>Rename</span>
                 </button>
                 <button
                   onClick={handleCopyLink}
-                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
                 >
-                  <Link className="h-3.5 w-3.5 text-indigo-400" />
+                  <Link className="h-3.5 w-3.5 text-[var(--primary)]" />
                   <span>Copy Link</span>
                 </button>
-                <div className="my-1 border-t border-white/10" />
+                <div className="my-1 border-t border-[var(--border-subtle)]" />
                 <button
                   onClick={() => {
                     setShowMenu(false);
                     setShowDeleteModal(true);
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-rose-400 hover:bg-rose-500/15 hover:text-rose-300 transition-colors cursor-pointer font-medium"
+                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 transition-colors cursor-pointer font-medium"
                 >
-                  <Trash2 className="h-3.5 w-3.5 text-rose-400" />
+                  <Trash2 className="h-3.5 w-3.5 text-rose-500" />
                   <span>Delete</span>
                 </button>
               </div>
@@ -203,7 +203,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
         )}
       </div>
 
-      {/* Beautiful Modal Confirmation Dialog */}
+      {/* Confirmation Dialog */}
       <DeleteConfirmModal
         isOpen={showDeleteModal}
         title={conversation.title}

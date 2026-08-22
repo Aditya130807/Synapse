@@ -6,7 +6,18 @@ export interface ToolInputSchema {
   required?: string[];
 }
 
-export interface Tool<TInput = Record<string, unknown>, TOutput = unknown> {
+export type ToolExecutionStatus = 'success' | 'failed' | 'denied' | 'invalid';
+
+export interface ToolResult<T = unknown> {
+  toolId: string;
+  status: ToolExecutionStatus;
+  data?: T;
+  error?: string;
+  durationMs: number;
+  metadata?: Record<string, unknown>;
+}
+
+export interface Tool<TInput = any, TOutput = any> {
   id: string;
   name: string;
   description: string;
@@ -15,10 +26,4 @@ export interface Tool<TInput = Record<string, unknown>, TOutput = unknown> {
   execute(input: TInput, context: AgentContext): Promise<TOutput>;
 }
 
-export interface ToolExecutionResult {
-  toolId: string;
-  success: boolean;
-  output?: unknown;
-  error?: string;
-  durationMs: number;
-}
+export interface ToolExecutionResult extends ToolResult {}

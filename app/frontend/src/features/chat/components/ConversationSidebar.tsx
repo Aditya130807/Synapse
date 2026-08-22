@@ -56,7 +56,7 @@ export const ConversationSidebar: React.FC = () => {
     if (list.length === 0) return null;
     return (
       <div key={title} className="mb-4">
-        <div className="px-2 mb-1.5 text-[10px] font-bold text-slate-400/80 uppercase tracking-widest">
+        <div className="px-2 mb-1.5 text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">
           {title}
         </div>
         <div className="space-y-1">
@@ -78,12 +78,16 @@ export const ConversationSidebar: React.FC = () => {
   const hasAnyConversations = filteredConversations.length > 0;
 
   return (
-    <div className="flex h-full w-full flex-col border-r border-white/[0.06] bg-[#060A14]/95 backdrop-blur-2xl p-3.5 select-none shrink-0">
+    <div className="flex h-full w-full flex-col border-r border-[var(--border)] bg-[var(--sidebar)] backdrop-blur-2xl p-3.5 select-none shrink-0">
       {/* Top Action Row */}
       <div className="mb-3.5 flex items-center gap-2">
         <button
           onClick={() => createNewConversation()}
-          className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs px-3.5 py-2.5 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_25px_rgba(59,130,246,0.45)] transition-all duration-200 cursor-pointer active:scale-[0.98]"
+          className="flex-1 flex items-center justify-center gap-2 rounded-xl font-semibold text-xs px-3.5 py-2.5 shadow-sm transition-all duration-200 cursor-pointer active:scale-[0.98]"
+          style={{
+            backgroundColor: 'var(--primary)',
+            color: 'var(--primary-foreground)',
+          }}
         >
           <Plus className="h-4 w-4" />
           <span>New Chat</span>
@@ -91,7 +95,7 @@ export const ConversationSidebar: React.FC = () => {
 
         <button
           type="button"
-          className="p-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-slate-400 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer active:scale-95"
+          className="p-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-elevated)] transition-all cursor-pointer active:scale-95"
           title="Conversation options"
         >
           <SlidersHorizontal className="h-4 w-4" />
@@ -100,18 +104,18 @@ export const ConversationSidebar: React.FC = () => {
 
       {/* Real-time Search Input Filter */}
       <div className="relative mb-3.5">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--muted)]" />
         <input
           type="text"
           value={searchFilter}
           onChange={(e) => setSearchFilter(e.target.value)}
           placeholder="Search conversations..."
-          className="w-full bg-[#020617]/70 border border-white/[0.08] focus:border-[#3B82F6]/60 rounded-xl pl-9 pr-8 py-2 text-xs text-[#F8FAFC] placeholder-slate-400/60 focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/20 transition-all duration-200"
+          className="w-full bg-[var(--input)] border border-[var(--border)] focus:border-[var(--primary)] rounded-xl pl-9 pr-8 py-2 text-xs text-[var(--text-primary)] placeholder-[var(--muted)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] transition-all duration-200"
         />
         {searchFilter && (
           <button
             onClick={() => setSearchFilter('')}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-white rounded transition-colors"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-[var(--muted)] hover:text-[var(--text-primary)] rounded transition-colors"
             title="Clear search"
           >
             <X className="h-3.5 w-3.5" />
@@ -126,15 +130,15 @@ export const ConversationSidebar: React.FC = () => {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-11 rounded-xl bg-white/[0.03] animate-pulse border border-white/[0.02]"
+                className="h-11 rounded-xl bg-[var(--skeleton)] animate-pulse border border-[var(--border-subtle)]"
               />
             ))}
           </div>
         ) : !hasAnyConversations ? (
-          <div className="flex flex-col items-center justify-center py-12 px-2 text-center text-slate-400">
-            <MessageSquarePlus className="h-8 w-8 text-slate-500/40 mb-2" />
-            <p className="text-xs font-medium text-slate-300">No chats found</p>
-            <p className="text-[11px] text-slate-400/60 mt-0.5">
+          <div className="flex flex-col items-center justify-center py-12 px-2 text-center text-[var(--muted)]">
+            <MessageSquarePlus className="h-8 w-8 opacity-40 mb-2" />
+            <p className="text-xs font-medium text-[var(--text-secondary)]">No chats found</p>
+            <p className="text-[11px] opacity-60 mt-0.5">
               {searchFilter ? 'Try a different search term' : 'Click "+ New Chat" to begin'}
             </p>
           </div>

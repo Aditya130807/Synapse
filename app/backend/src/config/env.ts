@@ -13,14 +13,36 @@ export const env = {
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
 
   // --- AI Provider Selection ---
-  AI_PROVIDER: process.env.AI_PROVIDER || 'openrouter',
+  AI_PROVIDER: process.env.AI_PROVIDER || 'omniroute',
   SYSTEM_PROMPT: process.env.SYSTEM_PROMPT || DEFAULT_SYSTEM_PROMPT,
 
-  // --- OpenRouter (default provider) ---
+  // --- OmniRoute Provider ---
+  OMNIROUTE_BASE_URL: process.env.OMNIROUTE_BASE_URL || 'http://localhost:20128/v1',
+  OMNIROUTE_API_KEY: process.env.OMNIROUTE_API_KEY || '',
+
+  // --- OpenRouter ---
   OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || '',
   OPENROUTER_MODEL: process.env.OPENROUTER_MODEL || 'openai/gpt-oss-20b:free',
 
-  // --- Future providers (optional — only required when AI_PROVIDER matches) ---
+  // --- Agent-Specific Primary & Fallback Models ---
+  GENERAL_AGENT_MODEL: process.env.GENERAL_AGENT_MODEL || 'auto/best-fast',
+  GENERAL_AGENT_FALLBACK_MODELS: process.env.GENERAL_AGENT_FALLBACK_MODELS || 'auto/fast,auto/chat',
+
+  CODING_AGENT_MODEL: process.env.CODING_AGENT_MODEL || 'auto/best-coding',
+  CODING_AGENT_FALLBACK_MODELS: process.env.CODING_AGENT_FALLBACK_MODELS || 'auto/coding:reliable,auto/coding:fast',
+
+  RESEARCH_AGENT_MODEL: process.env.RESEARCH_AGENT_MODEL || 'auto/best-reasoning',
+  RESEARCH_AGENT_FALLBACK_MODELS: process.env.RESEARCH_AGENT_FALLBACK_MODELS || 'auto/pro-reasoning,auto/reasoning',
+
+  DOCUMENT_AGENT_MODEL: process.env.DOCUMENT_AGENT_MODEL || 'aug/sonnet4.6-500k',
+  DOCUMENT_AGENT_FALLBACK_MODELS: process.env.DOCUMENT_AGENT_FALLBACK_MODELS || 'auto/smart,oc/deepseek-v4-flash-free',
+
+  SYNTHESIS_AGENT_MODEL: process.env.SYNTHESIS_AGENT_MODEL || 'auto/smart',
+  SYNTHESIS_AGENT_FALLBACK_MODELS: process.env.SYNTHESIS_AGENT_FALLBACK_MODELS || 'auto/pro-reasoning,auto/reasoning',
+
+  ENABLE_GENERAL_AGENT_EMERGENCY_FALLBACK: process.env.ENABLE_GENERAL_AGENT_EMERGENCY_FALLBACK ?? 'true',
+
+  // --- Future providers ---
   GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
   GEMINI_MODEL: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
   OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',

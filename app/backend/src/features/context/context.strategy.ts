@@ -17,6 +17,9 @@ export interface AgentExecutionMeta {
   routingReason: string;
   durationMs: number;
   traceSteps: AgentExecutionTraceStep[];
+  fallback?: boolean;
+  fallbackReason?: string;
+  toolCalls?: unknown[];
 }
 
 export interface ContextStrategyMeta {
@@ -33,6 +36,6 @@ export interface ContextStrategyMeta {
   previousContextReason: string;
   filesLoaded: Array<{ fileId: string; filename: string; chunkCount: number }>;
   memoriesInjectedCount?: number;
-  memoriesInjected?: Array<{ id: string; content: string; type: string; isPinned: boolean; scope?: 'conversation' | 'workspace' }>;
+  memoriesInjected?: Array<{ id: string; content: string; type: string; isPinned: boolean; scope?: string; category?: string }>;
   agentMeta?: AgentExecutionMeta;
 }

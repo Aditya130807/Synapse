@@ -3,8 +3,8 @@ import type { AIProviderName } from './ai.types.js';
 /**
  * Default AI provider and model configurations.
  */
-export const DEFAULT_AI_PROVIDER: AIProviderName = 'openrouter';
-export const DEFAULT_AI_MODEL = 'openai/gpt-oss-20b:free';
+export const DEFAULT_AI_PROVIDER: AIProviderName = 'omniroute';
+export const DEFAULT_AI_MODEL = 'auto/best-fast';
 
 /**
  * Default system prompt for Synapse AI assistant.
@@ -18,6 +18,7 @@ export const AI_CONFIG = {
   defaultModel: DEFAULT_AI_MODEL,
   defaultSystemPrompt: DEFAULT_SYSTEM_PROMPT,
   supportedProviders: [
+    'omniroute',
     'openrouter',
     'gemini',
     'openai',

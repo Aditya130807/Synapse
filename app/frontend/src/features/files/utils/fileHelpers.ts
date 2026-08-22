@@ -36,29 +36,34 @@ export function getExtensionBadgeProps(extension: string) {
     case 'pdf':
       return {
         label: 'PDF',
-        colorClass: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+        colorClass: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+        iconBg: 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400',
       };
     case 'md':
     case 'markdown':
       return {
         label: 'Markdown',
-        colorClass: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+        colorClass: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
+        iconBg: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-600 dark:text-indigo-400',
       };
     case 'txt':
       return {
         label: 'TXT',
-        colorClass: 'bg-slate-500/10 text-slate-300 border-slate-500/20',
+        colorClass: 'bg-neutral-500/10 text-neutral-600 dark:text-neutral-400 border-neutral-500/20',
+        iconBg: 'bg-neutral-500/10 border-neutral-500/20 text-neutral-600 dark:text-neutral-400',
       };
     case 'docx':
     case 'doc':
       return {
         label: 'DOCX',
-        colorClass: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+        colorClass: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+        iconBg: 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400',
       };
     default:
       return {
         label: ext.toUpperCase(),
-        colorClass: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+        colorClass: 'bg-[var(--primary-muted)] text-[var(--primary)] border-[var(--primary-border)]',
+        iconBg: 'bg-[var(--primary-muted)] border-[var(--primary-border)] text-[var(--primary)]',
       };
   }
 }
@@ -68,29 +73,29 @@ export function getStatusBadgeProps(status: FileStatus) {
     case 'uploaded':
       return {
         label: 'Uploaded',
-        colorClass: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-        dotColor: 'bg-blue-400',
+        colorClass: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+        dotColor: 'bg-blue-500',
         isProcessing: false,
       };
     case 'processing':
       return {
         label: 'Processing',
-        colorClass: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-        dotColor: 'bg-amber-400 animate-pulse',
+        colorClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+        dotColor: 'bg-amber-500 animate-pulse',
         isProcessing: true,
       };
     case 'processed':
       return {
         label: 'Ready',
-        colorClass: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-        dotColor: 'bg-emerald-400',
+        colorClass: 'bg-[#F2F7E9] dark:bg-[rgba(166,214,58,0.10)] text-[#4F6F18] dark:text-[#A6D63A] border-[#E8F0D8] dark:border-[rgba(166,214,58,0.25)]',
+        dotColor: 'bg-[#6B8E23] dark:bg-[#A6D63A]',
         isProcessing: false,
       };
     case 'failed':
       return {
         label: 'Failed',
-        colorClass: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-        dotColor: 'bg-rose-400',
+        colorClass: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+        dotColor: 'bg-rose-500',
         isProcessing: false,
       };
   }

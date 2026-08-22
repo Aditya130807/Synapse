@@ -40,3 +40,29 @@ export async function getMeHandler(
     next(error);
   }
 }
+
+export async function updateProfileHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const user = await authService.updateProfile(req.user!.sub, req.body);
+    res.status(200).json({ user, message: 'Profile updated successfully' });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updatePasswordHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const result = await authService.updatePassword(req.user!.sub, req.body);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}

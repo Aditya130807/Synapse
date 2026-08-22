@@ -34,13 +34,13 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
       onClick={onCancel}
     >
       <div
-        className="relative w-full max-w-md rounded-2xl border border-white/10 bg-[#0B0F17] p-6 shadow-2xl transition-all"
+        className="relative w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--modal)] p-6 shadow-2xl transition-all"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           onClick={onCancel}
-          className="absolute right-4 top-4 rounded-lg p-1 text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
+          className="absolute right-4 top-4 rounded-lg p-1 text-[var(--muted)] hover:bg-[var(--surface-elevated)] hover:text-[var(--text-primary)] transition-colors"
           title="Close dialog"
         >
           <X className="h-4 w-4" />
@@ -52,14 +52,14 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
             <Trash2 className="h-5.5 w-5.5" />
           </div>
           <div>
-            <h3 className="text-base font-semibold text-white">Delete Conversation?</h3>
-            <p className="text-xs text-slate-400 mt-0.5">This action cannot be undone.</p>
+            <h3 className="text-base font-semibold text-[var(--text-primary)]">Delete Conversation?</h3>
+            <p className="text-xs text-[var(--muted)] mt-0.5">This action cannot be undone.</p>
           </div>
         </div>
 
         {/* Message Content */}
-        <div className="my-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-xs text-slate-300 leading-relaxed">
-          Are you sure you want to delete <span className="font-semibold text-white">"{title}"</span>? All messages in this chat will be permanently removed.
+        <div className="my-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)] p-3 text-xs text-[var(--text-secondary)] leading-relaxed">
+          Are you sure you want to delete <span className="font-semibold text-[var(--text-primary)]">"{title}"</span>? All messages in this chat will be permanently removed.
         </div>
 
         {/* Action Buttons */}
@@ -67,7 +67,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-xl border border-white/10 bg-white/[0.05] px-4 py-2 text-xs font-medium text-slate-300 hover:bg-white/10 hover:text-white transition-all cursor-pointer"
+            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--surface-elevated)] hover:text-[var(--text-primary)] transition-all cursor-pointer"
           >
             Cancel
           </button>

@@ -3,8 +3,7 @@ import { retrievalService } from '../rag/retrieval.service.js';
 import { contextService } from '../rag/context.service.js';
 import { PromptBuilder } from '../rag/promptBuilder.js';
 import { IntentClassifier } from './intent.classifier.js';
-import { getRelevantMemoriesForContext } from '../memory/memory.service.js';
-import { findRelevantWorkspaceMemories } from '../workspace-memory/workspace-memory.service.js';
+import * as persistentMemoryService from '../memory/persistent-memory.service.js';
 import type { ContextStrategyMeta, ContextStrategyType } from './context.strategy.js';
 import type { RAGPromptResult, RetrievedChunk } from '../rag/rag.types.js';
 
@@ -27,23 +26,52 @@ export class ContextEngine {
     query: string,
     messageFileIds: string[] = []
   ): Promise<RAGPromptResult> {
-    // 1. Fetch conversation-level file IDs & active memories
+    // 1. Fetch conversation-level file IDs & active persistent memories/instructions
     let conversationFileIds: string[] = [];
-    let memoriesInjected: Array<{ id: string; content: string; type: string; isPinned: boolean; scope: 'conversation' | 'workspace' }> = [];
+    let memoriesInjected: Array<{ id: string; content: string; type: string; isPinned: boolean; scope: string; category: string }> = [];
     let memoriesText = '';
 
-    // Fetch workspace memories relevant to the query (user-scoped, cross-conversation)
-    const workspaceMemories = await findRelevantWorkspaceMemories(userId, query, 5);
-    if (workspaceMemories.length > 0) {
-      for (const wm of workspaceMemories) {
-        memoriesInjected.push({
-          id: wm.id,
-          content: wm.content,
-          type: wm.type,
-          isPinned: false,
-          scope: 'workspace',
-        });
+    // Fetch top relevant active persistent memories & instructions (Instructions priority 10 are ranked first)
+    const persistentMemories = await persistentMemoryService.getRelevantMemoriesForContext(
+      userId,
+      'default',
+      conversationId,
+      query,
+      12
+    );
+
+    if (persistentMemories.length > 0) {
+      memoriesInjected = persistentMemories.map((m) => ({
+        id: m.id,
+        content: m.content,
+        type: m.type,
+        isPinned: m.isPinned,
+        scope: m.scope,
+        category: m.category,
+      }));
+
+      const instructions = persistentMemories.filter((m) => m.type === 'INSTRUCTION' || m.type === 'CONSTRAINT');
+      const otherMemories = persistentMemories.filter((m) => m.type !== 'INSTRUCTION' && m.type !== 'CONSTRAINT');
+
+      let formattedBlocks: string[] = [];
+      if (instructions.length > 0) {
+        formattedBlocks.push(
+          'PERSISTENT INSTRUCTIONS (MANDATORY RULES YOU MUST FOLLOW):\n' +
+            instructions
+              .map((m) => `- [${m.scope} ${m.type}]: ${m.content}`)
+              .join('\n')
+        );
       }
+      if (otherMemories.length > 0) {
+        formattedBlocks.push(
+          'RELEVANT PROJECT MEMORY & PREFERENCES:\n' +
+            otherMemories
+              .map((m) => `- [${m.scope} ${m.type}]: ${m.content}`)
+              .join('\n')
+        );
+      }
+
+      memoriesText = formattedBlocks.join('\n\n');
     }
 
     if (conversationId) {
@@ -52,30 +80,6 @@ export class ContextEngine {
         select: { fileId: true },
       });
       conversationFileIds = attachments.map((a) => a.fileId);
-
-      const memList = await getRelevantMemoriesForContext(conversationId, 10);
-      if (memList.length > 0) {
-        for (const m of memList) {
-          memoriesInjected.push({
-            id: m.id,
-            content: m.content,
-            type: m.type,
-            isPinned: m.isPinned,
-            scope: 'conversation',
-          });
-        }
-      }
-    }
-
-    // Build formatted memories text with scope labels
-    if (memoriesInjected.length > 0) {
-      memoriesText = memoriesInjected
-        .map((m) => {
-          const scopeLabel = m.scope === 'workspace' ? 'WORKSPACE' : 'CONVERSATION';
-          const pinnedLabel = m.isPinned ? ' (PINNED)' : '';
-          return `- [${m.type.toUpperCase()} | ${scopeLabel}${pinnedLabel}] ${m.content}`;
-        })
-        .join('\n');
     }
 
     // 2. Classify intent & detect explicit prior context reference

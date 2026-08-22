@@ -9,7 +9,9 @@ import authRouter from './features/auth/auth.routes.js';
 import chatRouter from './features/chat/chat.routes.js';
 import filesRouter from './features/files/files.routes.js';
 import searchRouter from './features/search/search.routes.js';
+import memoryRouter from './features/memory/memory.routes.js';
 import workspaceMemoryRouter from './features/workspace-memory/workspace-memory.routes.js';
+import dashboardRouter from './features/dashboard/dashboard.routes.js';
 
 const app = express();
 
@@ -33,7 +35,9 @@ app.use('/api/chat', chatRouter);
 app.use('/api/files', filesRouter);
 app.use('/api/knowledge', filesRouter);
 app.use('/api/search', searchRouter);
-app.use('/api/memory', workspaceMemoryRouter);
+app.use('/api/memory', memoryRouter);
+app.use('/api/workspace-memory', workspaceMemoryRouter);
+app.use('/api/dashboard', dashboardRouter);
 
 
 // Error handling

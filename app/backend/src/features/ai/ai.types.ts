@@ -19,6 +19,7 @@ export interface ChatMessage {
  */
 export interface AIResponse {
   content: string;
+  resolvedModel?: string;
 }
 
 /**
@@ -26,6 +27,7 @@ export interface AIResponse {
  * Extend this union when adding a new provider, then register it in providerFactory.ts.
  */
 export type AIProviderName =
+  | 'omniroute'
   | 'openrouter'
   | 'gemini'
   | 'openai'

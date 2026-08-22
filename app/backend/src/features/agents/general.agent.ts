@@ -7,8 +7,10 @@ import type {
   CanHandleResult,
   ChatMessageInput,
 } from './agent.types.js';
-import { providerFactory } from '../ai/factory/providerFactory.js';
+import { getModelProfile } from '../ai/model-profiles/agent.model.profiles.js';
+import { agentFallbackExecutor } from '../ai/fallback/agent.fallback.executor.js';
 import { CitationService } from '../rag/rag.service.js';
+import { ApiError } from '../../utils/ApiError.js';
 
 export class GeneralAgent implements Agent {
   public readonly id = 'general';
@@ -21,6 +23,7 @@ export class GeneralAgent implements Agent {
     'knowledge.read',
     'memory.read',
     'memory.write',
+    'calculator.execute',
   ];
 
   public async canHandle(_context: AgentContext): Promise<CanHandleResult> {
@@ -46,32 +49,16 @@ export class GeneralAgent implements Agent {
       ...context.history,
     ];
 
-    const provider = providerFactory();
-    let assistantContent = '';
+    const profile = getModelProfile(this.id);
+    const fallbackResult = await agentFallbackExecutor.execute(messages, profile, {
+      onChunk: options?.onChunk,
+      signal: options?.signal,
+    });
 
-    if (options?.onChunk) {
-      // Streaming mode
-      try {
-        const streamResult = await provider.generateStreamResponse(
-          messages,
-          options.onChunk,
-          options.signal
-        );
-        assistantContent = streamResult.content;
-      } catch (err) {
-        if (options.signal?.aborted && assistantContent.trim()) {
-          // Stream was aborted by user but partial response exists
-        } else {
-          throw err;
-        }
-      }
-    } else {
-      // Sync mode
-      const aiResponse = await provider.generateResponse(messages);
-      assistantContent = aiResponse.content;
+    const finalContent = fallbackResult.response.content.trim();
+    if (!finalContent) {
+      throw new ApiError(502, 'GeneralAgent: provider returned empty content after stream completion.');
     }
-
-    const finalContent = assistantContent.trim() || 'No response generated.';
     const metadata = CitationService.prepareMessageMetadata(context.ragResult.context);
     const citations = metadata?.citations ?? [];
 
@@ -81,6 +68,20 @@ export class GeneralAgent implements Agent {
       content: finalContent,
       citations,
       strategyMeta: context.ragResult.context.strategyMeta,
+      agentMeta: {
+        agentId: this.id,
+        agentName: this.name,
+        routingReason: 'General-purpose conversation execution.',
+        durationMs: Date.now() - startTime,
+        traceSteps: [],
+        provider: fallbackResult.meta.provider,
+        requestedModel: fallbackResult.meta.requestedModel,
+        selectedModel: fallbackResult.meta.selectedModel,
+        resolvedModel: fallbackResult.meta.resolvedModel,
+        fallback: fallbackResult.meta.fallback,
+        fallbackReason: fallbackResult.meta.fallbackReason,
+        fallbackAttempts: fallbackResult.meta.fallbackAttempts,
+      },
       durationMs: Date.now() - startTime,
     };
   }

@@ -26,7 +26,6 @@ import {
   Globe,
 } from 'lucide-react';
 
-
 import { formatRelativeTime } from '@/utils/time';
 import { CodeBlock } from './CodeBlock';
 import { CitationsList } from './CitationsList';
@@ -141,15 +140,15 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLatestU
   const getFileIcon = (ext?: string) => {
     switch (ext?.toLowerCase()) {
       case 'pdf':
-        return <FileText className="h-4 w-4 text-rose-400" />;
+        return <FileText className="h-4 w-4 text-rose-500" />;
       case 'md':
       case 'markdown':
-        return <FileCode className="h-4 w-4 text-indigo-400" />;
+        return <FileCode className="h-4 w-4 text-indigo-500" />;
       case 'docx':
       case 'doc':
-        return <FileSpreadsheet className="h-4 w-4 text-blue-400" />;
+        return <FileSpreadsheet className="h-4 w-4 text-blue-500" />;
       default:
-        return <FileIcon className="h-4 w-4 text-slate-300" />;
+        return <FileIcon className="h-4 w-4 text-[var(--muted)]" />;
     }
   };
 
@@ -157,7 +156,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLatestU
   if (isSystem) {
     return (
       <div className="flex w-full justify-center py-2 animate-in fade-in">
-        <div className="bg-amber-500/10 border border-amber-500/20 text-amber-200 px-4 py-2 rounded-xl text-xs font-medium">
+        <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 px-4 py-2 rounded-xl text-xs font-medium">
           {message.content}
         </div>
       </div>
@@ -167,40 +166,48 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLatestU
   // Render User Message
   if (isUser) {
     return (
-      <div className="group relative flex w-full justify-end py-1 animate-in fade-in slide-in-from-bottom-2">
-        <div className="flex gap-3 max-w-3xl flex-row-reverse items-start">
+      <div className="group relative flex w-full justify-end py-2 animate-in fade-in slide-in-from-bottom-2">
+        <div className="flex gap-3 max-w-2xl flex-row-reverse items-start">
           {/* User Avatar */}
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-[#3B82F6] to-[#2563EB] text-white font-bold text-xs shadow-md ring-2 ring-[#3B82F6]/30">
+          <div
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl font-bold text-xs shadow-xs"
+            style={{
+              backgroundColor: 'var(--primary)',
+              color: 'var(--primary-foreground)',
+            }}
+          >
             <User className="h-4 w-4" />
           </div>
 
           <div className="flex flex-col space-y-1.5 items-end min-w-0">
             {/* Header */}
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-[#F8FAFC]">You</span>
-              <span className="text-[10px] text-[#94A3B8] font-normal">
+              <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>You</span>
+              <span className="text-[10px] font-normal" style={{ color: 'var(--muted)' }}>
                 {formatRelativeTime(message.createdAt)}
               </span>
             </div>
 
             {/* Inline Editing Mode or User Message Bubble */}
             {isEditingUserMsg ? (
-              <div className="w-full flex flex-col gap-2 bg-[#020617] border border-blue-500/60 rounded-2xl p-3 shadow-xl">
+              <div className="w-full flex flex-col gap-2 rounded-2xl p-3 shadow-lg border" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--primary)' }}>
                 <textarea
                   value={userMsgContent}
                   onChange={(e) => setUserMsgContent(e.target.value)}
                   rows={3}
-                  className="w-full bg-transparent text-sm text-white focus:outline-none resize-none leading-relaxed"
+                  className="w-full bg-transparent text-sm focus:outline-none resize-none leading-relaxed"
+                  style={{ color: 'var(--text-primary)' }}
                   autoFocus
                 />
-                <div className="flex items-center justify-end gap-2 pt-1 border-t border-white/10">
+                <div className="flex items-center justify-end gap-2 pt-1 border-t" style={{ borderColor: 'var(--border)' }}>
                   <button
                     type="button"
                     onClick={() => {
                       setUserMsgContent(message.content);
                       setIsEditingUserMsg(false);
                     }}
-                    className="px-3 py-1 rounded-xl text-xs font-medium text-slate-300 hover:bg-white/10 transition-colors"
+                    className="px-3 py-1 rounded-xl text-xs font-medium transition-colors"
+                    style={{ color: 'var(--muted)' }}
                   >
                     Cancel
                   </button>
@@ -208,14 +215,24 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLatestU
                     type="button"
                     onClick={handleEditSubmit}
                     disabled={isGenerating || !userMsgContent.trim()}
-                    className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+                    className="px-3.5 py-1.5 rounded-xl text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+                    style={{
+                      backgroundColor: 'var(--primary)',
+                      color: 'var(--primary-foreground)',
+                    }}
                   >
                     Save & Submit
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="rounded-2xl rounded-tr-none px-4 py-3 text-sm leading-relaxed break-words bg-[#3B82F6] text-white shadow-[0_4px_16px_rgba(59,130,246,0.25)]">
+              <div
+                className="rounded-2xl rounded-tr-none px-4 py-3 text-sm leading-relaxed break-words shadow-2xs font-sans"
+                style={{
+                  backgroundColor: 'var(--primary)',
+                  color: 'var(--primary-foreground)',
+                }}
+              >
                 {/* Message Attachments */}
                 {message.attachments && message.attachments.length > 0 && (
                   <div className="flex flex-wrap items-center gap-2 mb-2.5 pb-2 border-b border-white/20">
@@ -227,7 +244,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLatestU
                         <div
                           key={att.id || att.fileId}
                           onClick={() => handlePreviewAttachment(att.fileId || fileObj?.id)}
-                          className="group flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/15 border border-white/25 text-xs text-white font-medium shadow-sm transition-all hover:scale-[1.02] hover:bg-white/25 cursor-pointer select-none"
+                          className="group flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/20 border border-white/30 text-xs font-medium shadow-2xs transition-all hover:scale-[1.02] cursor-pointer select-none"
                           title="Click to preview file"
                         >
                           <div className="flex items-center gap-1.5">
@@ -242,20 +259,20 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLatestU
                           </span>
 
                           {fileObj?.size ? (
-                            <span className="text-[10px] text-blue-100 font-mono">
+                            <span className="text-[10px] opacity-80 font-mono">
                               {formatBytes(fileObj.size)}
                             </span>
                           ) : null}
 
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-300 bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30 ml-1">
-                            <CheckCircle2 className="h-2.5 w-2.5 text-emerald-300" />
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-white/20 px-1.5 py-0.5 rounded ml-1">
+                            <CheckCircle2 className="h-2.5 w-2.5" />
                             <span>Context Ready</span>
                           </span>
 
                           {loadingFileId === (att.fileId || fileObj?.id) ? (
-                            <Loader2 className="h-3 w-3 animate-spin text-white" />
+                            <Loader2 className="h-3 w-3 animate-spin" />
                           ) : (
-                            <ExternalLink className="h-3 w-3 text-blue-200 group-hover:text-white transition-colors" />
+                            <ExternalLink className="h-3 w-3 opacity-80 group-hover:opacity-100 transition-opacity" />
                           )}
                         </div>
                       );
@@ -268,33 +285,35 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLatestU
 
             {/* User Action Bar */}
             {!isEditingUserMsg && (
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 pt-1 text-slate-400">
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 pt-1" style={{ color: 'var(--muted)' }}>
                 {isLatestUserMessage && (
                   <button
                     onClick={() => {
                       setUserMsgContent(message.content);
                       setIsEditingUserMsg(true);
                     }}
-                    className="flex items-center gap-1 px-2 py-1 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/10 text-slate-300 hover:text-white transition-all text-[11px] cursor-pointer active:scale-95"
+                    className="flex items-center gap-1 px-2 py-1 rounded-lg border bg-[var(--surface)] hover:bg-[var(--surface-hover)] transition-all text-[11px] cursor-pointer active:scale-95"
+                    style={{ borderColor: 'var(--border)', color: 'var(--muted)' }}
                     title="Edit prompt"
                   >
-                    <Pencil className="h-3 w-3 text-blue-400" />
+                    <Pencil className="h-3 w-3 text-[var(--primary)]" />
                     <span>Edit</span>
                   </button>
                 )}
                 <button
                   onClick={() => handleCopy()}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/10 text-slate-300 hover:text-white transition-all text-[11px] cursor-pointer active:scale-95"
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg border bg-[var(--surface)] hover:bg-[var(--surface-hover)] transition-all text-[11px] cursor-pointer active:scale-95"
+                  style={{ borderColor: 'var(--border)', color: 'var(--muted)' }}
                   title="Copy text"
                 >
                   {copied ? (
                     <>
-                      <Check className="h-3 w-3 text-emerald-400" />
-                      <span className="text-emerald-400 font-semibold">Copied ✓</span>
+                      <Check className="h-3 w-3 text-[var(--primary)]" />
+                      <span className="font-semibold" style={{ color: 'var(--primary)' }}>Copied ✓</span>
                     </>
                   ) : (
                     <>
-                      <Copy className="h-3 w-3 text-slate-400" />
+                      <Copy className="h-3 w-3" style={{ color: 'var(--muted)' }} />
                       <span>Copy</span>
                     </>
                   )}
@@ -312,94 +331,102 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLatestU
     );
   }
 
-  // Render Assistant Message (Single Unified Component — Transitioning Thinking → Streaming → Completed)
+  // Render Assistant Message (Open Document-Style Layout Blending Seamlessly into Canvas)
   return (
-    <div className="group relative flex w-full py-4 px-4 sm:px-6 rounded-2xl border border-white/[0.08] bg-[#0B0F19]/90 shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-xl transition-all animate-in fade-in slide-in-from-bottom-2">
-      <div className="flex gap-3.5 max-w-3xl w-full flex-row items-start">
+    <div className="group relative flex w-full py-4 px-2 sm:px-4 transition-all animate-in fade-in slide-in-from-bottom-2">
+      <div className="flex gap-3.5 w-full flex-row items-start">
         {/* Assistant Avatar */}
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold text-xs shadow-md ring-2 ring-[#A855F7]/30 mt-0.5">
+        <div
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl font-bold text-xs shadow-2xs border mt-0.5"
+          style={{
+            backgroundColor: 'var(--primary-muted)',
+            borderColor: 'var(--primary-border)',
+            color: 'var(--primary)',
+          }}
+        >
           <Sparkles className="h-4 w-4" />
         </div>
 
-        {/* Unified Assistant Message Area */}
+        {/* Unified Assistant Message Content Area */}
         <div className="flex flex-col space-y-3 flex-1 min-w-0">
           {/* Header */}
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-[#F8FAFC]">Synapse AI</span>
-            <span className="text-[10px] text-[#94A3B8] font-normal">
+            <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>Synapse AI</span>
+            <span className="text-[10px] font-normal" style={{ color: 'var(--muted)' }}>
               {formatRelativeTime(message.createdAt)}
             </span>
           </div>
 
-          {/* Thinking State vs Markdown Content (Seamless single-component transition) */}
+          {/* Thinking State vs Markdown Content */}
           {isStreamingMessage && message.content.trim() === '' ? (
-            <div className="flex items-center gap-2 text-xs font-medium text-indigo-400 py-1.5 select-none animate-pulse">
-              <Loader2 className="h-4 w-4 animate-spin text-indigo-400 shrink-0" />
+            <div className="flex items-center gap-2 text-xs font-medium py-1.5 select-none animate-pulse" style={{ color: 'var(--primary)' }}>
+              <Loader2 className="h-4 w-4 animate-spin shrink-0" style={{ color: 'var(--primary)' }} />
               <span>Synapse AI is thinking...</span>
             </div>
           ) : (
-            <div className="text-sm leading-relaxed text-[#F8FAFC] break-words">
+            <div className="text-sm leading-relaxed break-words font-sans" style={{ color: 'var(--text-primary)' }}>
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeRaw, rehypeSanitize, rehypeHighlight]}
                 components={{
                   h1: ({ children }) => (
-                    <h1 className="text-xl font-bold text-white mb-3 mt-4 first:mt-0 pb-1.5 border-b border-white/10">
+                    <h1 className="text-xl font-bold mb-3 mt-4 first:mt-0 pb-1.5 border-b" style={{ color: 'var(--text-primary)', borderColor: 'var(--border)' }}>
                       {children}
                     </h1>
                   ),
                   h2: ({ children }) => (
-                    <h2 className="text-lg font-semibold text-white mb-2.5 mt-3.5 first:mt-0">
+                    <h2 className="text-lg font-semibold mb-2.5 mt-3.5 first:mt-0" style={{ color: 'var(--text-primary)' }}>
                       {children}
                     </h2>
                   ),
                   h3: ({ children }) => (
-                    <h3 className="text-base font-semibold text-slate-100 mb-2 mt-3 first:mt-0">
+                    <h3 className="text-base font-semibold mb-2 mt-3 first:mt-0" style={{ color: 'var(--text-primary)' }}>
                       {children}
                     </h3>
                   ),
                   h4: ({ children }) => (
-                    <h4 className="text-sm font-semibold text-slate-200 mb-1.5 mt-2.5 first:mt-0">
+                    <h4 className="text-sm font-semibold mb-1.5 mt-2.5 first:mt-0" style={{ color: 'var(--text-primary)' }}>
                       {children}
                     </h4>
                   ),
-                  p: ({ children }) => <p className="mb-3 leading-relaxed text-slate-200 last:mb-0">{children}</p>,
-                  strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
-                  em: ({ children }) => <em className="italic text-slate-300">{children}</em>,
-                  del: ({ children }) => <del className="line-through text-slate-400">{children}</del>,
+                  p: ({ children }) => <p className="mb-3 leading-relaxed last:mb-0" style={{ color: 'var(--text-primary)' }}>{children}</p>,
+                  strong: ({ children }) => <strong className="font-semibold" style={{ color: 'var(--text-primary)' }}>{children}</strong>,
+                  em: ({ children }) => <em className="italic" style={{ color: 'var(--text-secondary)' }}>{children}</em>,
+                  del: ({ children }) => <del className="line-through" style={{ color: 'var(--muted)' }}>{children}</del>,
                   ul: ({ children }) => (
-                    <ul className="list-disc list-outside ml-5 mb-3 space-y-1 text-slate-200">{children}</ul>
+                    <ul className="list-disc list-outside ml-5 mb-3 space-y-1" style={{ color: 'var(--text-primary)' }}>{children}</ul>
                   ),
                   ol: ({ children }) => (
-                    <ol className="list-decimal list-outside ml-5 mb-3 space-y-1 text-slate-200">{children}</ol>
+                    <ol className="list-decimal list-outside ml-5 mb-3 space-y-1" style={{ color: 'var(--text-primary)' }}>{children}</ol>
                   ),
-                  li: ({ children }) => <li className="leading-relaxed text-slate-200 pl-1">{children}</li>,
+                  li: ({ children }) => <li className="leading-relaxed pl-1" style={{ color: 'var(--text-primary)' }}>{children}</li>,
                   blockquote: ({ children }) => (
-                    <blockquote className="border-l-4 border-[#3B82F6]/70 bg-white/[0.03] pl-4 py-2 pr-3 my-3 text-slate-300 italic rounded-r-lg">
+                    <blockquote className="border-l-4 pl-4 py-2 pr-3 my-3 italic rounded-r-lg" style={{ borderColor: 'var(--primary)', backgroundColor: 'var(--surface-elevated)', color: 'var(--text-secondary)' }}>
                       {children}
                     </blockquote>
                   ),
-                  hr: () => <hr className="border-white/10 my-4" />,
+                  hr: () => <hr className="my-4" style={{ borderColor: 'var(--border)' }} />,
                   table: ({ children }) => (
-                    <div className="overflow-x-auto my-3 rounded-xl border border-white/10 bg-[#090D16]/60 shadow-lg">
-                      <table className="min-w-full divide-y divide-white/10 text-xs sm:text-sm">{children}</table>
+                    <div className="overflow-x-auto my-3 rounded-xl border shadow-xs" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
+                      <table className="min-w-full divide-y text-xs sm:text-sm" style={{ borderColor: 'var(--border)' }}>{children}</table>
                     </div>
                   ),
-                  thead: ({ children }) => <thead className="bg-white/[0.05] font-semibold text-white">{children}</thead>,
-                  tbody: ({ children }) => <tbody className="divide-y divide-white/[0.04] text-slate-300">{children}</tbody>,
-                  tr: ({ children }) => <tr className="transition-colors hover:bg-white/[0.02]">{children}</tr>,
+                  thead: ({ children }) => <thead className="font-semibold" style={{ backgroundColor: 'var(--surface-elevated)', color: 'var(--text-primary)' }}>{children}</thead>,
+                  tbody: ({ children }) => <tbody className="divide-y" style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}>{children}</tbody>,
+                  tr: ({ children }) => <tr className="transition-colors hover:bg-[var(--surface-hover)]">{children}</tr>,
                   th: ({ children }) => (
-                    <th className="px-3.5 py-2.5 text-left font-semibold text-slate-200 border-b border-white/10">
+                    <th className="px-3.5 py-2.5 text-left font-semibold border-b" style={{ color: 'var(--text-primary)', borderColor: 'var(--border)' }}>
                       {children}
                     </th>
                   ),
-                  td: ({ children }) => <td className="px-3.5 py-2 text-slate-300 border-b border-white/[0.04]">{children}</td>,
+                  td: ({ children }) => <td className="px-3.5 py-2 border-b" style={{ color: 'var(--text-primary)', borderColor: 'var(--border-subtle)' }}>{children}</td>,
                   a: ({ href, children }) => (
                     <a
                       href={href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[#3B82F6] hover:text-[#60A5FA] underline underline-offset-4 transition-colors font-medium"
+                      className="underline underline-offset-4 transition-colors font-medium"
+                      style={{ color: 'var(--primary)' }}
                     >
                       {children}
                     </a>
@@ -408,7 +435,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLatestU
                     const isInline = !className || !className.includes('hljs');
                     if (isInline) {
                       return (
-                        <code className="bg-slate-800/90 border border-white/10 rounded px-1.5 py-0.5 font-mono text-xs text-sky-300 font-normal">
+                        <code
+                          className="border rounded px-1.5 py-0.5 font-mono text-xs font-normal"
+                          style={{
+                            backgroundColor: 'var(--code-inline-bg)',
+                            borderColor: 'var(--code-inline-border)',
+                            color: 'var(--code-inline-text)',
+                          }}
+                        >
                           {children}
                         </code>
                       );
@@ -422,8 +456,23 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLatestU
               </ReactMarkdown>
 
               {isStreamingMessage && (
-                <span className="inline-block w-2 h-4 ml-1 bg-[#3B82F6] animate-pulse rounded-full align-middle shadow-[0_0_8px_#3B82F6]" />
+                <span className="inline-block w-2 h-4 ml-1 animate-pulse rounded-full align-middle" style={{ backgroundColor: 'var(--primary)' }} />
               )}
+            </div>
+          )}
+
+          {/* Memory Auto-Save Notification Toast */}
+          {(message.metadata as any)?.memoryFeedback?.toastMessage && (
+            <div
+              className="flex items-center gap-2 p-2.5 rounded-xl border text-xs font-semibold shadow-2xs animate-in fade-in duration-200"
+              style={{
+                backgroundColor: 'var(--primary-muted)',
+                borderColor: 'var(--primary-border)',
+                color: 'var(--primary)',
+              }}
+            >
+              <Brain className="h-4 w-4 shrink-0" style={{ color: 'var(--primary)' }} />
+              <span>{(message.metadata as any).memoryFeedback.toastMessage}</span>
             </div>
           )}
 
@@ -440,21 +489,26 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLatestU
 
           {/* Assistant Action Bar */}
           {!isStreamingMessage && (
-            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 pt-2 border-t border-white/[0.06] text-slate-400">
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 pt-2 border-t text-xs" style={{ borderColor: 'var(--border-subtle)', color: 'var(--muted)' }}>
               {/* Copy Button */}
               <button
                 onClick={() => handleCopy()}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/10 text-slate-300 hover:text-white transition-all text-[11px] cursor-pointer active:scale-95"
+                className="flex items-center gap-1 px-2 py-1 rounded-lg border transition-all text-[11px] cursor-pointer active:scale-95"
+                style={{
+                  backgroundColor: 'var(--surface)',
+                  borderColor: 'var(--border)',
+                  color: 'var(--text-secondary)',
+                }}
                 title="Copy message"
               >
                 {copied ? (
                   <>
-                    <Check className="h-3 w-3 text-emerald-400" />
-                    <span className="text-emerald-400 font-semibold">Copied ✓</span>
+                    <Check className="h-3 w-3" style={{ color: 'var(--primary)' }} />
+                    <span className="font-semibold" style={{ color: 'var(--primary)' }}>Copied ✓</span>
                   </>
                 ) : (
                   <>
-                    <Copy className="h-3 w-3 text-slate-400" />
+                    <Copy className="h-3 w-3" style={{ color: 'var(--muted)' }} />
                     <span>Copy</span>
                   </>
                 )}
@@ -463,11 +517,12 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLatestU
               {/* Like Button */}
               <button
                 onClick={() => handleToggleRating('like')}
-                className={`p-1.5 rounded-lg border transition-all cursor-pointer active:scale-95 ${
-                  currentRating === 'like'
-                    ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-400 shadow-[0_0_10px_rgba(34,197,94,0.2)]'
-                    : 'border-white/10 bg-white/[0.04] text-slate-400 hover:bg-white/10 hover:text-white'
-                }`}
+                className="p-1.5 rounded-lg border transition-all cursor-pointer active:scale-95"
+                style={{
+                  backgroundColor: currentRating === 'like' ? 'var(--primary-muted)' : 'var(--surface)',
+                  borderColor: currentRating === 'like' ? 'var(--primary-border)' : 'var(--border)',
+                  color: currentRating === 'like' ? 'var(--primary)' : 'var(--muted)',
+                }}
                 title="Helpful response"
               >
                 <ThumbsUp className="h-3 w-3" />
@@ -476,11 +531,12 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLatestU
               {/* Dislike Button */}
               <button
                 onClick={() => handleToggleRating('dislike')}
-                className={`p-1.5 rounded-lg border transition-all cursor-pointer active:scale-95 ${
-                  currentRating === 'dislike'
-                    ? 'border-rose-500/40 bg-rose-500/20 text-rose-400 shadow-[0_0_10px_rgba(244,63,94,0.2)]'
-                    : 'border-white/10 bg-white/[0.04] text-slate-400 hover:bg-white/10 hover:text-white'
-                }`}
+                className="p-1.5 rounded-lg border transition-all cursor-pointer active:scale-95"
+                style={{
+                  backgroundColor: currentRating === 'dislike' ? 'rgba(225,29,72,0.1)' : 'var(--surface)',
+                  borderColor: currentRating === 'dislike' ? 'rgba(225,29,72,0.3)' : 'var(--border)',
+                  color: currentRating === 'dislike' ? '#E11D48' : 'var(--muted)',
+                }}
                 title="Not helpful"
               >
                 <ThumbsDown className="h-3 w-3" />
@@ -490,10 +546,15 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLatestU
               <button
                 onClick={() => regenerateResponse()}
                 disabled={isGenerating}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/10 text-slate-300 hover:text-white transition-all text-[11px] cursor-pointer active:scale-95 disabled:opacity-50"
+                className="flex items-center gap-1 px-2 py-1 rounded-lg border transition-all text-[11px] cursor-pointer active:scale-95 disabled:opacity-50"
+                style={{
+                  backgroundColor: 'var(--surface)',
+                  borderColor: 'var(--border)',
+                  color: 'var(--text-secondary)',
+                }}
                 title="Regenerate response"
               >
-                <RotateCcw className="h-3 w-3 text-indigo-400" />
+                <RotateCcw className="h-3 w-3" style={{ color: 'var(--primary)' }} />
                 <span>Regenerate</span>
               </button>
 
@@ -501,26 +562,38 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLatestU
               <div className="relative" ref={menuRef}>
                 <button
                   onClick={() => setShowMoreMenu((prev) => !prev)}
-                  className="p-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/10 text-slate-400 hover:text-white transition-all cursor-pointer"
+                  className="p-1.5 rounded-lg border transition-all cursor-pointer"
+                  style={{
+                    backgroundColor: 'var(--surface)',
+                    borderColor: 'var(--border)',
+                    color: 'var(--muted)',
+                  }}
                   title="More options"
                 >
                   <MoreHorizontal className="h-3 w-3" />
                 </button>
 
                 {showMoreMenu && (
-                  <div className="absolute left-0 top-full mt-1.5 z-30 w-44 rounded-xl border border-white/10 bg-[#0B0F17] p-1.5 shadow-2xl backdrop-blur-xl animate-in fade-in duration-100">
+                  <div
+                    className="absolute left-0 top-full mt-1.5 z-30 w-44 rounded-xl border p-1.5 shadow-xl backdrop-blur-xl animate-in fade-in duration-100"
+                    style={{
+                      backgroundColor: 'var(--dropdown)',
+                      borderColor: 'var(--border)',
+                    }}
+                  >
                     <button
                       onClick={async () => {
                         setShowMoreMenu(false);
                         try {
-                          await createMemoryApi(message.conversationId, message.content.slice(0, 250), 'fact', true);
+                          await createMemoryApi(message.conversationId, message.content.slice(0, 250), 'fact');
                         } catch (err) {
                           console.error('Failed to remember message:', err);
                         }
                       }}
-                      className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-indigo-300 hover:bg-indigo-500/15 transition-colors cursor-pointer"
+                      className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs transition-colors cursor-pointer"
+                      style={{ color: 'var(--text-primary)' }}
                     >
-                      <Brain className="h-3.5 w-3.5 text-indigo-400" />
+                      <Brain className="h-3.5 w-3.5 text-[var(--primary)]" />
                       <span>Remember snippet</span>
                     </button>
                     <button
@@ -532,9 +605,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLatestU
                           console.error('Failed to remember snippet to workspace:', err);
                         }
                       }}
-                      className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-emerald-300 hover:bg-emerald-500/15 transition-colors cursor-pointer"
+                      className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs transition-colors cursor-pointer"
+                      style={{ color: 'var(--text-primary)' }}
                     >
-                      <Globe className="h-3.5 w-3.5 text-emerald-400" />
+                      <Globe className="h-3.5 w-3.5 text-[var(--primary)]" />
                       <span>Remember to Workspace</span>
                     </button>
                     <button
@@ -542,9 +616,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLatestU
                         setShowMoreMenu(false);
                         handleCopy(true);
                       }}
-                      className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+                      className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs transition-colors cursor-pointer"
+                      style={{ color: 'var(--text-primary)' }}
                     >
-                      <Copy className="h-3.5 w-3.5 text-blue-400" />
+                      <Copy className="h-3.5 w-3.5 text-[var(--primary)]" />
                       <span>{copiedRaw ? 'Copied ✓' : 'Copy Raw Markdown'}</span>
                     </button>
                     <button
@@ -552,9 +627,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLatestU
                         setShowMoreMenu(false);
                         deleteMessage(message.id);
                       }}
-                      className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-rose-400 hover:bg-rose-500/15 hover:text-rose-300 transition-colors cursor-pointer font-medium"
+                      className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer font-medium"
                     >
-                      <Trash2 className="h-3.5 w-3.5 text-rose-400" />
+                      <Trash2 className="h-3.5 w-3.5 text-rose-500" />
                       <span>Delete Message</span>
                     </button>
                   </div>

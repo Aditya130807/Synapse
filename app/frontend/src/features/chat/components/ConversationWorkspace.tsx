@@ -13,7 +13,7 @@ export const ConversationWorkspace: React.FC = () => {
   const hasMessages = currentMessages.length > 0;
 
   return (
-    <div className="flex h-full w-full flex-col bg-[#030712] relative overflow-hidden">
+    <div className="flex h-full w-full flex-col bg-background text-foreground relative overflow-hidden">
       {/* Top Bar Header */}
       <ChatHeader />
 
@@ -33,7 +33,7 @@ export const ConversationWorkspace: React.FC = () => {
       )}
 
       {/* Main Viewport: MessageList vs EmptyConversation */}
-      <div className="flex-1 overflow-hidden flex flex-col relative">
+      <div className="flex-1 overflow-hidden flex flex-col relative bg-background">
         {hasActiveConversation && hasMessages ? (
           <MessageList />
         ) : (

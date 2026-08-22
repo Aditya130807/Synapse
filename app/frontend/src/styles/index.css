@@ -1,80 +1,223 @@
 @import "tailwindcss";
 
+/* ═══════════════════════════════════════════════════════════
+   SYNAPSE — UNIVERSAL THEME SYSTEM
+   Dark mode: default (:root) — Restrained Graphite + Lime System
+   Light mode: html[data-theme="light"] overrides
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─── Dark Mode (default) ─── */
 :root {
-  --background: #020617;
-  --foreground: #F8FAFC;
+  /* App backgrounds */
+  --background:        #080B0A;
+  --foreground:        #F2F4EF;
 
-  --surface: rgba(15, 23, 42, 0.82);
-  --surface-hover: rgba(20, 30, 50, 0.92);
+  /* Sidebar / navigation shell */
+  --sidebar:           #0D110E;
+  --sidebar-border:    #293029;
+  --sidebar-hover:     #1A211A;
 
-  --card: rgba(15, 23, 42, 0.82);
-  --card-foreground: #F8FAFC;
+  /* Navbar / Header */
+  --navbar:            #101411;
+  --navbar-border:     #293029;
 
-  --popover: rgba(15, 23, 42, 0.95);
-  --popover-foreground: #F8FAFC;
+  /* Surface system — main content cards/panels */
+  --surface:           #111612;
+  --surface-elevated:  #151A15;
+  --surface-hover:     #1A211A;
 
-  --primary: #3B82F6;
-  --primary-hover: #2563EB;
-  --primary-foreground: #FFFFFF;
+  /* Card */
+  --card:              #111612;
+  --card-foreground:   #F2F4EF;
 
-  --text-primary: #F8FAFC;
-  --text-secondary: #CBD5E1;
-  --muted: #94A3B8;
+  /* Popover / dropdown / modal / dialog / drawer */
+  --popover:           #111612;
+  --popover-foreground: #F2F4EF;
+  --modal:             #111612;
+  --drawer:            #111612;
+  --dropdown:          #111612;
 
-  --success: #22C55E;
-  --warning: #F59E0B;
-  --purple-accent: #A855F7;
+  /* Input surfaces */
+  --input:             #101411;
+  --input-hover:       #151A15;
+  --input-border:      #293029;
 
-  --border: rgba(255, 255, 255, 0.06);
-  --input: rgba(255, 255, 255, 0.06);
-  --ring: #3B82F6;
+  /* Message composer */
+  --composer:          #111612;
+  --chat-header:       #101411;
+
+  /* Empty / skeleton states */
+  --empty-bg:          #0D110E;
+  --skeleton:          #1A211A;
+
+  /* Text tokens */
+  --text-primary:      #F2F4EF;
+  --text-secondary:    #A2AAA2;
+  --muted:             #727A72;
+  --placeholder:       #727A72;
+
+  /* Border tokens */
+  --border:            #293029;
+  --border-subtle:     #293029;
+  --border-strong:     #353D34;
+
+  /* Primary accent — Synapse Green */
+  --primary:           #A6D63A;
+  --primary-hover:     #B6E64A;
+  --primary-foreground: #080B0A;
+  --primary-muted:     rgba(166, 214, 58, 0.10);
+  --primary-border:    rgba(166, 214, 58, 0.25);
+  --primary-glow:      rgba(166, 214, 58, 0.15);
+
+  /* Code block tokens */
+  --code-bg:           #151A15;
+  --code-header-bg:    #1A211A;
+  --code-border:       #293029;
+  --code-text:         #F2F4EF;
+  --code-muted:        #A2AAA2;
+  --code-btn-bg:       #111612;
+  --code-btn-border:   #293029;
+  --code-btn-text:     #A2AAA2;
+  --code-inline-bg:    #1A211A;
+  --code-inline-border: #293029;
+  --code-inline-text:  #A6D63A;
+
+  /* Active navigation */
+  --nav-active-bg:     rgba(166, 214, 58, 0.10);
+  --nav-active-border: rgba(166, 214, 58, 0.25);
+  --nav-active-icon:   #A6D63A;
+  --nav-indicator:     #A6D63A;
+
+  /* Semantic colors */
+  --success:           #A6D63A;
+  --warning:           #C88719;
+  --error:             #E11D48;
+  --info:              #4F7CAC;
+  --purple-accent:     #A6D63A;
+
+  /* Scrollbar */
+  --scrollbar-thumb:       rgba(255, 255, 255, 0.10);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.20);
 
   --radius: 1rem;
 }
 
-@theme {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+/* ─── Light Mode ─── */
+html[data-theme="light"] {
+  /* App backgrounds */
+  --background:        #F7F8F6;
+  --foreground:        #171A18;
 
-  --color-surface: var(--surface);
-  --color-surface-hover: var(--surface-hover);
+  /* Sidebar / navigation shell */
+  --sidebar:           #F0F2EF;
+  --sidebar-border:    #E2E6E2;
+  --sidebar-hover:     #EEF1ED;
 
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
+  /* Navbar / Header */
+  --navbar:            #FFFFFF;
+  --navbar-border:     #E2E6E2;
 
-  --color-primary: var(--primary);
-  --color-primary-hover: var(--primary-hover);
-  --color-primary-foreground: var(--primary-foreground);
+  /* Surface system */
+  --surface:           #FFFFFF;
+  --surface-elevated:  #FAFBF9;
+  --surface-hover:     #EEF1ED;
 
-  --color-text-primary: var(--text-primary);
-  --color-text-secondary: var(--text-secondary);
-  --color-muted: var(--muted);
+  /* Card */
+  --card:              #FFFFFF;
+  --card-foreground:   #171A18;
 
-  --color-success: var(--success);
-  --color-warning: var(--warning);
-  --color-purple-accent: var(--purple-accent);
+  /* Popover / dropdown / modal / drawer */
+  --popover:           #FFFFFF;
+  --popover-foreground: #171A18;
+  --modal:             #FFFFFF;
+  --drawer:            #FFFFFF;
+  --dropdown:          #FFFFFF;
 
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
+  /* Input surfaces */
+  --input:             #FFFFFF;
+  --input-hover:       #FAFBF9;
+  --input-border:      #E2E6E2;
 
-  --font-sans: "Geist", "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  /* Message composer */
+  --composer:          #FFFFFF;
+  --chat-header:       #FFFFFF;
+
+  /* Empty / skeleton states */
+  --empty-bg:          #FAFBF9;
+  --skeleton:          #ECEFEC;
+
+  /* Text tokens */
+  --text-primary:      #171A18;
+  --text-secondary:    #68706A;
+  --muted:             #969D98;
+  --placeholder:       #969D98;
+
+  /* Border tokens */
+  --border:            #E2E6E2;
+  --border-subtle:     #ECEFEC;
+  --border-strong:     #CDD3CD;
+
+  /* Primary accent — Synapse Green */
+  --primary:           #6B8E23;
+  --primary-hover:     #4F6F18;
+  --primary-foreground: #FFFFFF;
+  --primary-muted:     #E8F0D8;
+  --primary-border:    rgba(107, 142, 35, 0.35);
+  --primary-glow:      rgba(107, 142, 35, 0.15);
+
+  /* Code block tokens */
+  --code-bg:           #F1F3F0;
+  --code-header-bg:    #E8EBE7;
+  --code-border:       #E2E6E2;
+  --code-text:         #171A18;
+  --code-muted:        #68706A;
+  --code-btn-bg:       #F7F8F6;
+  --code-btn-border:   #E2E6E2;
+  --code-btn-text:     #68706A;
+  --code-inline-bg:    #EEF1ED;
+  --code-inline-border: #E2E6E2;
+  --code-inline-text:  #4F6F18;
+
+  /* Active navigation */
+  --nav-active-bg:     #E8F0D8;
+  --nav-active-border: rgba(107, 142, 35, 0.35);
+  --nav-active-icon:   #4F6F18;
+  --nav-indicator:     #6B8E23;
+
+  /* Semantic colors */
+  --success:           #6B8E23;
+  --warning:           #C88719;
+  --error:             #D94A4A;
+  --info:              #4F7CAC;
+  --purple-accent:     #7C59A8;
+
+  /* Scrollbar */
+  --scrollbar-thumb:       rgba(0, 0, 0, 0.15);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
 }
 
+/* ─── Base Styles ─── */
 body {
   background-color: var(--background);
-  color: var(--text-primary);
-  font-family: "Geist", "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum";
-  min-height: 100vh;
-  margin: 0;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  color: var(--foreground);
+  font-family: var(--font-sans, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif);
 }
 
-/* Custom Linear-Style Slim Scrollbars */
+/* ─── Custom Utilities ─── */
+.bg-background {
+  background-color: var(--background);
+}
+
+.text-foreground {
+  color: var(--foreground);
+}
+
+/* ─── Light mode: remove dark decorative glow bleed divs ─── */
+html[data-theme="light"] .ambient-glow {
+  display: none;
+}
+
+/* ─── Scrollbars ─── */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -85,10 +228,79 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--scrollbar-thumb);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* ─── Light mode: highlight.js code block theme overrides ─── */
+html[data-theme="light"] pre code.hljs,
+html[data-theme="light"] .hljs {
+  background: var(--code-bg) !important;
+  color: var(--code-text) !important;
+}
+
+html[data-theme="light"] .hljs-keyword,
+html[data-theme="light"] .hljs-selector-tag,
+html[data-theme="light"] .hljs-subst {
+  color: #A626A4 !important;
+  font-weight: 600;
+}
+
+html[data-theme="light"] .hljs-string,
+html[data-theme="light"] .hljs-title.class_,
+html[data-theme="light"] .hljs-section,
+html[data-theme="light"] .hljs-attribute {
+  color: #50A14F !important;
+}
+
+html[data-theme="light"] .hljs-title,
+html[data-theme="light"] .hljs-title.function_,
+html[data-theme="light"] .hljs-selector-id,
+html[data-theme="light"] .hljs-selector-class {
+  color: #4078F2 !important;
+}
+
+html[data-theme="light"] .hljs-comment,
+html[data-theme="light"] .hljs-quote {
+  color: #A0A1A7 !important;
+  font-style: italic;
+}
+
+html[data-theme="light"] .hljs-number,
+html[data-theme="light"] .hljs-literal,
+html[data-theme="light"] .hljs-variable,
+html[data-theme="light"] .hljs-template-variable,
+html[data-theme="light"] .hljs-tag .hljs-attr {
+  color: #986801 !important;
+}
+
+html[data-theme="light"] .hljs-attr,
+html[data-theme="light"] .hljs-property,
+html[data-theme="light"] .hljs-params {
+  color: #986801 !important;
+}
+
+html[data-theme="light"] .hljs-built_in,
+html[data-theme="light"] .hljs-type {
+  color: #C18401 !important;
+}
+
+html[data-theme="light"] .hljs-symbol,
+html[data-theme="light"] .hljs-bullet,
+html[data-theme="light"] .hljs-link {
+  color: #0184BC !important;
+}
+
+html[data-theme="light"] .hljs-meta {
+  color: #4078F2 !important;
+}
+
+/* ─── Selection ─── */
+::selection {
+  background: var(--primary-muted);
+  color: var(--text-primary);
 }

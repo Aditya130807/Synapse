@@ -151,7 +151,11 @@ export async function createStreamMessageHandler(
     res.setHeader('X-Accel-Buffering', 'no');
 
     const abortController = new AbortController();
-    req.on('close', () => {
+
+    // res.on('close') fires when the client disconnects before res.end() completes.
+    // NOTE: Using req.on('close') is incorrect for HTTP POST SSE requests because req (ReadableStream)
+    // emits 'close' as soon as the incoming request body completes reading (~20ms into request).
+    res.on('close', () => {
       if (!res.writableEnded) {
         abortController.abort();
       }
@@ -165,18 +169,33 @@ export async function createStreamMessageHandler(
       }
     };
 
-    const assistantMessage = await generateStreamAIResponse(
-      userId,
-      conversationId,
-      onChunk,
-      abortController.signal,
-    );
+    const keepaliveInterval = setInterval(() => {
+      if (!res.writableEnded) {
+        res.write(': keepalive\n\n');
+      }
+    }, 8000);
+
+    let assistantMessage: ReturnType<typeof generateStreamAIResponse> extends Promise<infer T> ? T : never;
+    try {
+      assistantMessage = await generateStreamAIResponse(
+        userId,
+        conversationId,
+        onChunk,
+        abortController.signal,
+      );
+    } catch (streamErr: unknown) {
+      throw streamErr;
+    } finally {
+      clearInterval(keepaliveInterval);
+    }
 
     if (!res.writableEnded) {
       res.write(`data: ${JSON.stringify({ type: 'done', assistantMessage })}\n\n`);
       res.end();
     }
   } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.error(`[DIAG][controller] Outer catch: headersSent=${res.headersSent} writableEnded=${res.writableEnded} err=${errMsg}`);
     if (res.headersSent) {
       if (!res.writableEnded) {
         const message = error instanceof Error ? error.message : 'Streaming error';
@@ -237,7 +256,7 @@ export async function regenerateStreamMessageHandler(
     res.setHeader('X-Accel-Buffering', 'no');
 
     const abortController = new AbortController();
-    req.on('close', () => {
+    res.on('close', () => {
       if (!res.writableEnded) {
         abortController.abort();
       }
@@ -249,12 +268,24 @@ export async function regenerateStreamMessageHandler(
       }
     };
 
-    const assistantMessage = await generateStreamAIResponse(
-      userId,
-      conversationId,
-      onChunk,
-      abortController.signal,
-    );
+    // SSE keepalive during reasoning phase (same rationale as createStreamMessageHandler)
+    const keepaliveInterval = setInterval(() => {
+      if (!res.writableEnded) {
+        res.write(': keepalive\n\n');
+      }
+    }, 8000);
+
+    let assistantMessage: ReturnType<typeof generateStreamAIResponse> extends Promise<infer T> ? T : never;
+    try {
+      assistantMessage = await generateStreamAIResponse(
+        userId,
+        conversationId,
+        onChunk,
+        abortController.signal,
+      );
+    } finally {
+      clearInterval(keepaliveInterval);
+    }
 
     if (!res.writableEnded) {
       res.write(`data: ${JSON.stringify({ type: 'done', assistantMessage })}\n\n`);

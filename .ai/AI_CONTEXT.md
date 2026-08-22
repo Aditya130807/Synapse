@@ -10,7 +10,7 @@ Every AI agent must read this file before making changes and update it after com
 
 **Project Stage**
 
-Sprint 10 Complete: Multi-Agent Foundation & Orchestration
+Sprint 10.1 Complete: Synapse AI Provider Upgrade — OmniRoute + Independent Agent Model Fallbacks
 
 **Current Branch**
 
@@ -18,7 +18,7 @@ main
 
 **Current Focus**
 
-Sprint 10 Complete. Implemented extensible Multi-Agent foundation & orchestration layer (`Agent`, `AgentContext`, `AgentResult`, `AgentRegistry`, `AgentRouter`, `AgentOrchestrator`, `GeneralAgent`, `ToolRegistry`, `AgentExecutionMeta`). 100% backward compatible with Sprints 1–9.1. Ready for Sprint 11.
+Sprint 10.1 Complete. Upgraded Synapse to be AI provider-agnostic with `OmniRouteProvider` (`http://localhost:20128/v1`) while preserving OpenRouter support. Implemented per-agent model profiles (`getModelProfile`) and deterministic model fallback chains (`AgentFallbackExecutor`). Supported explicit attempt counting (`fallbackAttempts`), downstream resolved model tracking (`resolvedModel`), emergency GeneralAgent fallback with agent identity preservation (`requestedAgent` vs `executedAgent`), strict tool compatibility rules, and enhanced Context Inspector UI rendering. Verified 100% via unit tests, backend build, frontend build, and live OmniRoute smoke tests. Ready for Final Full-System Audit before Cloud Deployment.
 
 ---
 
@@ -116,12 +116,95 @@ Return Assistant `MessageDTO` (or stream tokens via SSE)
 ### Key Multi-Agent Files
 - `src/features/agents/agent.types.ts` — Core interfaces (`Agent`, `AgentContext`, `AgentResult`, `AgentExecutionMeta`)
 - `src/features/agents/agent.registry.ts` — AgentRegistry singleton
-- `src/features/agents/agent.router.ts` — AgentRouter service
-- `src/features/agents/agent.orchestrator.ts` — AgentOrchestrator coordinator
+- `src/features/agents/agent.router.ts` — AgentRouter service (Deterministic rules for General, Coding, Research, Document)
+- `src/features/agents/agent.orchestrator.ts` — AgentOrchestrator coordinator & graceful model fallback
 - `src/features/agents/general.agent.ts` — GeneralAgent implementation
+- `src/features/agents/coding.agent.ts` — CodingAgent implementation
+- `src/features/agents/research.agent.ts` — ResearchAgent implementation
+- `src/features/agents/document.agent.ts` — DocumentAgent implementation
+- `src/features/agents/prompts/` — Isolated agent system prompts (`general.prompt.ts`, `coding.prompt.ts`, `research.prompt.ts`, `document.prompt.ts`)
 - `src/features/agents/tools/tool.types.ts` & `tool.registry.ts` — Tool foundation
-- `src/features/agents/index.ts` — Module exports & auto-registration
-- Frontend: `ChatHeader.tsx` (Agent Indicator badge), `CitationsList.tsx` (Inspector Agent section)
+- `src/features/agents/index.ts` — Module exports & auto-registration of 4 specialized agents
+- Frontend: `ChatHeader.tsx` (Dynamic agent badge), `CitationsList.tsx` (Inspector Agent section + Fallback alert)
+
+---
+
+## Architecture: Specialized Agent Expansion — Synapse Multi-Agent v1 (Sprint 10 Phase A — AUTHORITATIVE)
+
+### Specialized Agent Portfolio
+1. **General Agent (`general`)**: Default fallback for conversational queries, standard reasoning, workspace memory, and general concept questions. Uses `GENERAL_AGENT_MODEL`.
+2. **Coding Agent (`coding`)**: Specialized for software engineering, debugging, code review, refactoring, architecture, and framework error diagnostics. Uses `CODING_AGENT_MODEL`.
+3. **Research Agent (`research`)**: Specialized for comparative analysis, trade-off evaluations, requirements synthesis, and structured evidence-based research reports. Uses `RESEARCH_AGENT_MODEL`.
+4. **Document Agent (`document`)**: Specialized for document explanation, multi-chunk synthesis, summarization, and retrieval-augmented document QA within strict message-level `fileIds` scope. Uses `DOCUMENT_AGENT_MODEL`.
+
+### Deterministic Intent Routing Rules (O(1) Cost)
+- **Document Intent**: Message contains attached files AND query requests explanation/summary/comparison of attached files → `DocumentAgent` (`confidence: 0.96`).
+- **Coding Intent**: Software engineering, error stack traces, API implementation errors, refactoring, code diagnosis → `CodingAgent` (`confidence: 0.92`).
+- **Research Intent**: Trade-off comparison, pros/cons, synthesis ("compare X and Y", "what should I use for my DB") → `ResearchAgent` (`confidence: 0.90`).
+- **General Fallback**: Ambiguous or standard queries ("What's an API?", "What is React?", "Tell me a joke") → `GeneralAgent` (`confidence: 0.80`).
+
+### Graceful Model Failure Fallback
+If a specialized agent model experiences an HTTP 429 rate limit or 502/503 provider unavailability error, `AgentOrchestrator` catches the error, logs a warning, gracefully re-executes through `GeneralAgent`, and records `fallback: true` and `fallbackReason` in `AgentExecutionMeta` so the user turn completes cleanly.
+
+---
+
+## Architecture: Agent Tools & Controlled Actions (Sprint 10 Phase B — AUTHORITATIVE)
+
+### Registered Tools
+1. **`calculator`**: Safe arithmetic expression evaluator (`evaluateSafeMath`) supporting percentages (`17.5% of 840`), powers (`2^10`), and nested operations. Does **NOT** use `eval()` or `Function()`. Required capability: `calculator.execute`.
+2. **`knowledge.search`**: Semantic RAG search across Knowledge Base documents using `retrievalService.retrieveRelevantChunks`. Strictly enforces user ownership (`userId`) and message-level file isolation (`messageFileIds`). Required capability: `knowledge.read`.
+3. **`web.search`**: Web search provider (`DuckDuckGoSearchProvider`) returning structured web snippets. Includes query length limits, timeouts, and prompt injection defense (filters injection directives from snippets). Required capability: `web.search`.
+
+### Tool Permission Matrix
+| Agent | `calculator.execute` | `knowledge.read` | `web.search` |
+|---|:---:|:---:|:---:|
+| `GeneralAgent` | ✅ | ✅ (Via Context Engine) | ❌ |
+| `CodingAgent` | ✅ | ✅ | ❌ |
+| `ResearchAgent` | ✅ | ✅ | ✅ |
+| `DocumentAgent` | ✅ | ✅ (Strict File Scope) | ❌ |
+
+### Security & Execution Control Model
+- **Permission Checking**: `ToolRegistry.executeTool` checks authenticated `userId` and verifies agent possesses `requiredCapabilities` before executing.
+- **Strict File Isolation**: If `messageFileIds` are present on the triggering message, `knowledge.search` restricts retrieval strictly to those target file IDs. Unrelated files are never searched.
+- **Execution Limits**: `AgentOrchestrator` caps tool invocations at `MAX_TOOL_CALLS = 5` per request to prevent infinite loops.
+- **Prompt Injection Defense**: Web search snippets are sanitized and marked as `[UNTRUSTED EXTERNAL WEB SEARCH RESULTS]` in system prompts.
+
+### What is NOT Implemented (Reserved for Future Phases)
+- Arbitrary shell execution (`shell.execute`) — **NOT IMPLEMENTED**
+- Arbitrary filesystem access — **NOT IMPLEMENTED**
+- Arbitrary SQL execution — **NOT IMPLEMENTED**
+- Unrestricted code execution (`code.execute`) — **NOT IMPLEMENTED**
+
+---
+
+## Architecture: Multi-Agent Collaboration & Task Orchestration (Sprint 10 Phase C — AUTHORITATIVE)
+
+### Collaboration Modes
+1. **`single`**: Standard single-agent execution path (`GeneralAgent`, `CodingAgent`, `ResearchAgent`, or `DocumentAgent`) for single-domain user queries.
+2. **`parallel`**: Concurrent execution of independent subtasks using `Promise.all` (up to `MAX_PARALLEL_AGENTS = 3`), e.g., Codebase Architecture Analysis (`CodingAgent`) + Security & Industry Best Practices Evaluation (`ResearchAgent`).
+3. **`sequential`**: Ordered execution where Task 2 receives Task 1 output as context input, e.g., Attached Specification Extraction (`DocumentAgent`) → Implementation Risk Evaluation (`CodingAgent`).
+
+### Safety Limits (Hard Boundaries)
+- `MAX_AGENTS_PER_REQUEST = 3`
+- `MAX_TASKS_PER_REQUEST = 5`
+- `MAX_PARALLEL_AGENTS = 3`
+- `MAX_COLLABORATION_DEPTH = 1` (Recursive collaboration and autonomous agent spawning are strictly forbidden)
+
+### Synthesis Engine (`synthesisService`)
+- Synthesizes findings from completed subtasks into a unified, evidence-backed final response.
+- Resolves conflicts between agent findings, identifies agreements, and explains uncertainties.
+- Merges and deduplicates file and web citations across participating agents by `fileId`, `chunkId`, and `url`.
+- Does **NOT** autonomously initiate web or knowledge base searches.
+
+### Subtask File & User Scope Isolation
+- Every subtask strictly inherits `userId`, `conversationId`, and `messageFileIds`.
+- If `messageFileIds` are attached to the triggering message (`[fileA]`), every collaborating agent accessing Knowledge Base content is strictly restricted to `fileA`.
+- Subtask failures do not crash the request; synthesis proceeds with remaining completed subtask outputs.
+
+### What is NOT Supported
+- Arbitrary autonomous agent spawning — **NOT SUPPORTED**
+- Recursive collaboration — **NOT SUPPORTED**
+- Unlimited agent execution — **NOT SUPPORTED**
 
 ---
 

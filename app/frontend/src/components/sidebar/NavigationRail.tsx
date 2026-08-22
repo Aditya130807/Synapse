@@ -22,7 +22,6 @@ export const NavigationRail: React.FC = () => {
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   ];
 
-
   const bottomItems = [
     { label: 'Settings', path: '/settings', icon: Settings },
   ];
@@ -34,16 +33,29 @@ export const NavigationRail: React.FC = () => {
       transition={{ type: 'spring', stiffness: 380, damping: 32 }}
       onMouseEnter={() => setIsExpanded(true)}
       onMouseLeave={() => setIsExpanded(false)}
-      className="relative z-40 flex h-screen flex-col border-r border-white/[0.06] bg-[#040711]/95 backdrop-blur-2xl py-4 select-none shrink-0 overflow-hidden shadow-[20px_0_40px_rgba(0,0,0,0.5)]"
+      className="relative z-40 flex h-screen flex-col border-r py-4 select-none shrink-0 overflow-hidden backdrop-blur-2xl transition-colors duration-200"
+      style={{
+        backgroundColor: 'var(--sidebar)',
+        borderColor: 'var(--sidebar-border)',
+        boxShadow: '4px 0 20px rgba(0,0,0,0.05)',
+      }}
     >
-      {/* Top Brand Logo Tile */}
+      {/* Brand Logo */}
       <div className="flex h-12 items-center px-4 mb-6">
         <Link
           to="/chat"
-          className="flex items-center gap-3.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-xl"
+          className="flex items-center gap-3.5 group focus-visible:outline-none focus-visible:ring-2 rounded-xl"
+          style={{ '--tw-ring-color': 'var(--primary)' } as React.CSSProperties}
         >
-          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-b from-blue-500 via-blue-600 to-indigo-600 text-white shadow-[0_0_24px_rgba(59,130,246,0.35)] ring-1 ring-white/20 transition-all duration-200 group-hover:scale-105">
-            <Sparkles className="h-4 w-4 text-white drop-shadow" />
+          <div
+            className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-all duration-200 group-hover:scale-105"
+            style={{
+              backgroundColor: 'var(--primary-muted)',
+              borderColor: 'var(--primary-border)',
+              color: 'var(--primary)',
+            }}
+          >
+            <Sparkles className="h-4 w-4" style={{ color: 'var(--primary)' }} />
           </div>
 
           <AnimatePresence>
@@ -55,11 +67,11 @@ export const NavigationRail: React.FC = () => {
                 transition={{ duration: 0.18 }}
                 className="flex flex-col leading-none whitespace-nowrap"
               >
-                <span className="text-sm font-bold text-white tracking-tight">
+                <span className="text-sm font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
                   Synapse
                 </span>
-                <span className="text-[10px] text-blue-400/90 font-medium tracking-wide mt-0.5">
-                  AI OS v1.0
+                <span className="text-[10px] font-medium tracking-wide mt-0.5" style={{ color: 'var(--primary)', opacity: 0.85 }}>
+                  AI Workspace
                 </span>
               </motion.div>
             )}
@@ -67,7 +79,7 @@ export const NavigationRail: React.FC = () => {
         </Link>
       </div>
 
-      {/* Navigation Items List */}
+      {/* Nav Items */}
       <nav className="flex-1 space-y-1.5 px-3">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -78,22 +90,30 @@ export const NavigationRail: React.FC = () => {
               key={item.path}
               to={item.path}
               className={cn(
-                'group relative flex h-10 items-center rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
-                isExpanded ? 'px-3.5 gap-3' : 'justify-center px-0',
-                isActive
-                  ? 'bg-gradient-to-r from-blue-500/15 via-indigo-500/08 to-transparent border border-blue-500/35 text-white shadow-[0_0_16px_rgba(59,130,246,0.18)] font-semibold'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]'
+                'group relative flex h-10 items-center rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2',
+                isExpanded ? 'px-3.5 gap-3' : 'justify-center px-0'
               )}
+              style={
+                isActive
+                  ? {
+                      backgroundColor: 'var(--nav-active-bg)',
+                      border: '1px solid var(--nav-active-border)',
+                      color: 'var(--text-primary)',
+                      fontWeight: 600,
+                    }
+                  : { color: 'var(--muted)' }
+              }
               title={!isExpanded ? item.label : undefined}
             >
               {isActive && (
-                <div className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-[#3B82F6] shadow-[0_0_12px_#3B82F6]" />
+                <div
+                  className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full"
+                  style={{ backgroundColor: 'var(--nav-indicator)' }}
+                />
               )}
               <Icon
-                className={cn(
-                  'h-4.5 w-4.5 shrink-0 transition-colors',
-                  isActive ? 'text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'text-slate-400 group-hover:text-slate-200'
-                )}
+                className="h-[18px] w-[18px] shrink-0 transition-colors"
+                style={{ color: isActive ? 'var(--nav-active-icon)' : 'var(--muted)' }}
               />
               <AnimatePresence>
                 {isExpanded && (
@@ -113,7 +133,7 @@ export const NavigationRail: React.FC = () => {
         })}
       </nav>
 
-      {/* Bottom Nav & Desktop Version Card */}
+      {/* Bottom Nav & Version */}
       <div className="px-3 pt-2 space-y-2.5">
         {bottomItems.map((item) => {
           const Icon = item.icon;
@@ -124,15 +144,17 @@ export const NavigationRail: React.FC = () => {
               key={item.path}
               to={item.path}
               className={cn(
-                'group relative flex h-10 items-center rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+                'group relative flex h-10 items-center rounded-xl transition-all duration-200 focus-visible:outline-none',
                 isExpanded ? 'px-3.5 gap-3' : 'justify-center px-0',
-                isActive
-                  ? 'bg-blue-500/15 border border-blue-500/30 text-white font-semibold'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]'
               )}
+              style={
+                isActive
+                  ? { backgroundColor: 'var(--nav-active-bg)', border: '1px solid var(--nav-active-border)', color: 'var(--text-primary)', fontWeight: 600 }
+                  : { color: 'var(--muted)' }
+              }
               title={!isExpanded ? item.label : undefined}
             >
-              <Icon className="h-4.5 w-4.5 shrink-0 text-slate-400 group-hover:text-slate-200" />
+              <Icon className="h-[18px] w-[18px] shrink-0" style={{ color: 'var(--muted)' }} />
               <AnimatePresence>
                 {isExpanded && (
                   <motion.span
@@ -150,29 +172,41 @@ export const NavigationRail: React.FC = () => {
           );
         })}
 
-        {/* Version Badge Card */}
+        {/* Version Badge */}
         <div className="pt-2">
           {isExpanded ? (
             <motion.div
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
-              className="rounded-2xl border border-white/[0.08] bg-[#0A0F1D]/80 backdrop-blur-xl p-3 text-xs text-slate-400 shadow-2xl"
+              className="rounded-2xl border p-3 text-xs"
+              style={{
+                borderColor: 'var(--border)',
+                backgroundColor: 'var(--surface-elevated)',
+                color: 'var(--muted)',
+              }}
             >
-              <div className="font-semibold text-white mb-0.5 flex items-center justify-between">
-                <span className="text-[12px] tracking-tight">Synapse v1.0 Shell</span>
+              <div className="font-semibold mb-0.5 flex items-center justify-between" style={{ color: 'var(--text-primary)' }}>
+                <span className="text-[12px] tracking-tight">Synapse v1.0</span>
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: 'var(--primary)' }} />
+                  <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: 'var(--primary)' }} />
                 </span>
               </div>
-              <div className="text-[10px] text-slate-400 font-normal">Sprint 3 Workspace Layout</div>
+              <div className="text-[10px] font-normal" style={{ color: 'var(--muted)' }}>AI Workspace</div>
             </motion.div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-2 px-1 rounded-xl border border-white/[0.06] bg-[#0A0F1D]/60 text-[10px] text-slate-400">
-              <span className="font-mono text-slate-300 font-semibold">v1.0</span>
+            <div
+              className="flex flex-col items-center justify-center py-2 px-1 rounded-xl border text-[10px]"
+              style={{
+                borderColor: 'var(--border-subtle)',
+                backgroundColor: 'var(--surface-elevated)',
+                color: 'var(--muted)',
+              }}
+            >
+              <span className="font-mono font-semibold" style={{ color: 'var(--text-secondary)' }}>v1.0</span>
               <span className="relative flex h-2 w-2 mt-1">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: 'var(--primary)' }} />
+                <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: 'var(--primary)' }} />
               </span>
             </div>
           )}

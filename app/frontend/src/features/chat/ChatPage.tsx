@@ -6,11 +6,11 @@ import { ConversationWorkspace } from './components/ConversationWorkspace';
 export default function ChatPage() {
   return (
     <ChatProvider>
-      <div className="flex h-screen w-full overflow-hidden bg-[#030712] text-foreground antialiased">
-        {/* Far Left: Expandable Navigation Rail (72px -> 260px on hover) */}
+      <div className="flex h-screen w-full overflow-hidden bg-background text-foreground antialiased">
+        {/* Far Left: Expandable Navigation Rail */}
         <NavigationRail />
 
-        {/* Middle Panel: Conversation Sidebar (280px on desktop) */}
+        {/* Middle Panel: Conversation Sidebar */}
         <div className="w-72 shrink-0 hidden md:block h-full">
           <ConversationSidebar />
         </div>

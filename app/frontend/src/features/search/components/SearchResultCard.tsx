@@ -10,27 +10,35 @@ interface SearchResultCardProps {
 
 export const SearchResultCard: React.FC<SearchResultCardProps> = ({ result, onClick }) => {
   const getScoreColor = (percent: number) => {
-    if (percent >= 80) return 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400';
-    if (percent >= 60) return 'bg-blue-500/15 border-blue-500/30 text-blue-400';
-    return 'bg-amber-500/15 border-amber-500/30 text-amber-400';
+    if (percent >= 80) return 'bg-[var(--primary-muted)] border-[var(--primary-border)] text-[var(--primary)]';
+    if (percent >= 60) return 'bg-blue-500/15 border-blue-500/30 text-blue-600 dark:text-blue-400';
+    return 'bg-amber-500/15 border-amber-500/30 text-amber-600 dark:text-amber-400';
   };
 
   return (
     <Card
       onClick={() => onClick(result)}
-      className="group relative flex flex-col p-4 rounded-xl border border-white/[0.08] bg-[#0F172A]/80 hover:bg-[#0F172A] hover:border-blue-500/40 transition-all shadow-sm cursor-pointer space-y-3"
+      className="group relative flex flex-col p-4 rounded-xl border transition-all duration-200 shadow-xs cursor-pointer space-y-3"
+      style={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)' }}
     >
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 truncate">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 shrink-0">
-            <FileText className="h-4 w-4" />
+          <div
+            className="flex h-8 w-8 items-center justify-center rounded-lg border shrink-0"
+            style={{
+              backgroundColor: 'var(--primary-muted)',
+              borderColor: 'var(--primary-border)',
+              color: 'var(--primary)',
+            }}
+          >
+            <FileText className="h-4 w-4" style={{ color: 'var(--primary)' }} />
           </div>
           <div className="truncate">
-            <h4 className="text-xs font-semibold text-slate-200 group-hover:text-blue-400 transition-colors truncate">
+            <h4 className="text-xs font-semibold tracking-tight transition-colors truncate" style={{ color: 'var(--text-primary)' }}>
               {result.filename}
             </h4>
-            <div className="flex items-center gap-2 text-[11px] font-mono text-slate-400">
+            <div className="flex items-center gap-2 text-[11px] font-mono" style={{ color: 'var(--muted)' }}>
               {result.page && <span>Page {result.page}</span>}
               {result.page && <span>•</span>}
               <span>Chunk #{result.chunkIndex + 1}</span>
@@ -52,14 +60,14 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({ result, onCl
       </div>
 
       {/* Matching Excerpt Content */}
-      <div className="p-3 rounded-lg bg-slate-950/80 border border-white/[0.04]">
-        <p className="text-xs text-slate-300 font-sans leading-relaxed line-clamp-3">
+      <div className="p-3 rounded-lg border" style={{ backgroundColor: 'var(--surface-elevated)', borderColor: 'var(--border-subtle)' }}>
+        <p className="text-xs font-sans leading-relaxed line-clamp-3" style={{ color: 'var(--text-secondary)' }}>
           "{result.content}"
         </p>
       </div>
 
       {/* Action Footer */}
-      <div className="flex items-center justify-end text-[11px] font-medium text-blue-400 group-hover:translate-x-0.5 transition-transform gap-1">
+      <div className="flex items-center justify-end text-[11px] font-medium group-hover:translate-x-0.5 transition-transform gap-1" style={{ color: 'var(--primary)' }}>
         <span>View matching section</span>
         <ArrowRight className="h-3.5 w-3.5" />
       </div>

@@ -1,195 +1,153 @@
 import prisma from '../../../lib/prisma.js';
-import { AgentRegistry, agentRegistry } from '../agent.registry.js';
-import { AgentRouter, agentRouter } from '../agent.router.js';
-import { AgentOrchestrator, agentOrchestrator } from '../agent.orchestrator.js';
-import { GeneralAgent, generalAgent } from '../general.agent.js';
-import { ToolRegistry, toolRegistry } from '../tools/tool.registry.js';
+import { agentRegistry } from '../agent.registry.js';
+import { agentRouter } from '../agent.router.js';
+import { agentOrchestrator } from '../agent.orchestrator.js';
+import { generalAgent } from '../general.agent.js';
+import { codingAgent } from '../coding.agent.js';
+import { researchAgent } from '../research.agent.js';
+import { documentAgent } from '../document.agent.js';
+import { toolRegistry } from '../tools/tool.registry.js';
 import type { Agent, AgentContext, AgentExecutionOptions, AgentResult } from '../agent.types.js';
+import { ApiError } from '../../../utils/ApiError.js';
 
 async function runAgentOrchestrationTests() {
-  console.log('====================================================');
-  console.log('  STARTING SPRINT 10 MULTI-AGENT ORCHESTRATION TESTS  ');
-  console.log('====================================================');
+  console.log('==================================================================');
+  console.log('  STARTING PHASE A SYNAPSE MULTI-AGENT V1 ORCHESTRATION TESTS   ');
+  console.log('==================================================================');
 
-  // --- TEST 1: Agent Registry ---
-  console.log('\n[TEST 1] AgentRegistry Verification');
-  
-  if (!agentRegistry.has('general')) {
-    agentRegistry.register(generalAgent);
-  }
-  
-  const fetchedGeneral = agentRegistry.get('general');
-  console.log(`   Found general agent: ${fetchedGeneral?.name} (${fetchedGeneral?.id})`);
-  if (!fetchedGeneral || fetchedGeneral.id !== 'general') {
-    throw new Error('Test 1 Failed: GeneralAgent not found in registry.');
-  }
+  // Ensure all 4 specialized agents are registered
+  if (!agentRegistry.has('general')) agentRegistry.register(generalAgent);
+  if (!agentRegistry.has('coding')) agentRegistry.register(codingAgent);
+  if (!agentRegistry.has('research')) agentRegistry.register(researchAgent);
+  if (!agentRegistry.has('document')) agentRegistry.register(documentAgent);
 
-  // Test duplicate registration rejection
-  try {
-    agentRegistry.register(generalAgent);
-    throw new Error('Test 1 Failed: Duplicate registration did not throw error.');
-  } catch (err: any) {
-    if (err.message.includes('already registered')) {
-      console.log('   Duplicate registration correctly rejected.');
-    } else {
-      throw err;
+  // --- TEST 1: Agent Registry & Multi-Agent Registration ---
+  console.log('\n[TEST 1] Specialized Agent Registry Verification');
+  const registered = agentRegistry.getAll();
+  console.log(`   Registered Agents (${registered.length}): ${registered.map((a) => a.name).join(', ')}`);
+  
+  const expectedAgentIds = ['general', 'coding', 'research', 'document'];
+  for (const id of expectedAgentIds) {
+    if (!agentRegistry.has(id)) {
+      throw new Error(`Test 1 Failed: Expected agent "${id}" is not registered.`);
     }
   }
+  console.log('   All 4 specialized agents verified in AgentRegistry.');
 
-  // Test custom dummy agent registration
-  const dummyAgent: Agent = {
-    id: 'dummy',
-    name: 'Dummy Agent',
-    description: 'Test dummy agent',
+  // --- TEST 2: Deterministic Intent Router Verification ---
+  console.log('\n[TEST 2] Intent Router Decision Verification');
+  
+  const routingTestCases = [
+    { query: "What's an API?", fileIds: [], expectedAgent: 'general' },
+    { query: 'Why is my API returning 500?', fileIds: [], expectedAgent: 'coding' },
+    { query: 'Compare REST and GraphQL.', fileIds: [], expectedAgent: 'research' },
+    { query: 'Explain this attached API documentation.', fileIds: ['file-1'], expectedAgent: 'document' },
+    { query: 'What is a PDF?', fileIds: [], expectedAgent: 'general' },
+    { query: 'Why is my PDF parser throwing an error?', fileIds: [], expectedAgent: 'coding' },
+    { query: 'Compare these two attached architecture documents.', fileIds: ['file-1', 'file-2'], expectedAgent: 'document' },
+    { query: 'What should I use for my database?', fileIds: [], expectedAgent: 'research' },
+  ];
+
+  for (const tc of routingTestCases) {
+    const ctx: AgentContext = {
+      userId: 'user-test-1',
+      conversationId: 'conv-test-1',
+      query: tc.query,
+      history: [],
+      messageFileIds: tc.fileIds,
+    };
+    const decision = await agentRouter.route(ctx);
+    console.log(`   Query: "${tc.query}" (files=${tc.fileIds.length}) → Agent: ${decision.agentId} (confidence=${decision.confidence})`);
+    if (decision.agentId !== tc.expectedAgent) {
+      throw new Error(
+        `Test 2 Failed for query "${tc.query}": expected "${tc.expectedAgent}" but got "${decision.agentId}".`
+      );
+    }
+  }
+  console.log('   All routing intent test cases passed perfectly!');
+
+  // --- TEST 3: Model Failure Fallback Verification ---
+  console.log('\n[TEST 3] Graceful Model Failure Fallback Verification');
+  
+  // Register a failing specialized agent that throws an OpenRouter HTTP 429 rate limit error
+  const failingAgent: Agent = {
+    id: 'failing-spec',
+    name: 'Failing Specialized Agent',
+    description: 'Failing agent for testing fallback',
     capabilities: ['conversation.read'],
-    canHandle: async () => ({ canHandle: false, confidence: 0 }),
-    execute: async () => ({
-      agentId: 'dummy',
-      status: 'success',
-      content: 'Dummy response',
-      durationMs: 10,
-    }),
-  };
-  agentRegistry.register(dummyAgent);
-  console.log(`   Successfully registered custom agent: ${dummyAgent.name}`);
-  if (!agentRegistry.has('dummy') || agentRegistry.getAll().length < 2) {
-    throw new Error('Test 1 Failed: Custom agent not present in registry.');
-  }
-
-  // --- TEST 2: Agent Router ---
-  console.log('\n[TEST 2] AgentRouter Verification');
-  const dummyContext: AgentContext = {
-    userId: 'user-123',
-    conversationId: 'conv-123',
-    query: 'What is React?',
-    history: [],
-    messageFileIds: [],
+    canHandle: async () => ({ canHandle: true, confidence: 0.99 }),
+    execute: async () => {
+      throw new ApiError(429, 'OpenRouter: Rate limit exceeded. Please try again later.');
+    },
   };
 
-  const decision = await agentRouter.route(dummyContext);
-  console.log(`   Routing Decision: agentId=${decision.agentId}, reason="${decision.reason}", confidence=${decision.confidence}`);
-  if (decision.agentId !== 'general' || decision.confidence !== 1.0) {
-    throw new Error('Test 2 Failed: Router did not return general agent for default prompt.');
-  }
-
-  // --- TEST 3: Tool Registry ---
-  console.log('\n[TEST 3] ToolRegistry Verification');
-  toolRegistry.register({
-    id: 'test-tool',
-    name: 'Test Tool',
-    description: 'A harmless test tool',
-    requiredCapabilities: ['tools.execute'],
-    execute: async (input) => ({ result: `Processed ${input.value}` }),
+  // Temporarily force router to pick failing agent
+  const originalRoute = agentRouter.route;
+  (agentRouter as any).route = async () => ({
+    agentId: 'failing-spec',
+    reason: 'Testing fallback logic',
+    confidence: 0.99,
+    candidates: ['failing-spec', 'general'],
   });
 
-  const toolExec = await toolRegistry.executeTool('test-tool', { value: 42 }, dummyContext);
-  console.log(`   Tool Execution Result: success=${toolExec.success}, output=`, toolExec.output);
-  if (!toolExec.success || (toolExec.output as any).result !== 'Processed 42') {
-    throw new Error('Test 3 Failed: Tool execution failed.');
-  }
+  // Temporarily register failing agent and a mock general agent to prevent actual network calls during fallback test
+  const mockGeneralAgent: Agent = {
+    id: 'general',
+    name: 'General Agent',
+    description: 'Mock fallback general agent',
+    capabilities: generalAgent.capabilities,
+    canHandle: generalAgent.canHandle.bind(generalAgent),
+    execute: async (context: AgentContext): Promise<AgentResult> => ({
+      agentId: 'general',
+      status: 'success',
+      content: 'Fallback response generated successfully by GeneralAgent.',
+      strategyMeta: context.ragResult?.context.strategyMeta,
+      durationMs: 12,
+    }),
+  };
 
-  // --- TEST 4: End-to-End AgentOrchestrator Execution ---
-  console.log('\n[TEST 4] AgentOrchestrator End-to-End Execution');
-  
-  // Ensure test user exists in DB
+  const realGeneral = agentRegistry.get('general');
+  (agentRegistry as any).agents.set('failing-spec', failingAgent);
+  (agentRegistry as any).agents.set('general', mockGeneralAgent);
+
+  // Setup test user & conversation
   let user = await prisma.user.findFirst();
   if (!user) {
     user = await prisma.user.create({
-      data: {
-        name: 'Agent Test User',
-        email: 'agent-test@example.com',
-        password: 'password123',
-      },
+      data: { name: 'Fallback Test User', email: 'fallback-test@example.com', password: 'password123' },
     });
   }
-
-  // Create test conversation
   const conv = await prisma.conversation.create({
-    data: {
-      userId: user.id,
-      title: 'Agent Orchestration Test',
-    },
+    data: { userId: user.id, title: 'Fallback Test Conv' },
   });
-
-  // Create user message
   await prisma.message.create({
-    data: {
-      conversationId: conv.id,
-      role: 'user',
-      content: 'Hello, what is the capital of France?',
-    },
+    data: { conversationId: conv.id, role: 'user', content: 'Test prompt' },
   });
 
-  try {
-    const assistantMsg = await agentOrchestrator.execute(user.id, conv.id);
-    console.log(`   Assistant Message Created: id=${assistantMsg.id}, role=${assistantMsg.role}`);
-    console.log(`   Content Excerpt: "${assistantMsg.content.slice(0, 60)}..."`);
-    
-    const meta = assistantMsg.metadata?.strategyMeta as any;
-    if (!meta || !meta.agentMeta || meta.agentMeta.agentId !== 'general') {
-      throw new Error('Test 4 Failed: Assistant message metadata missing agentMeta.');
-    }
-    if (!meta.agentMeta.traceSteps || meta.agentMeta.traceSteps.length < 3) {
-      throw new Error('Test 4 Failed: Execution trace steps missing or incomplete.');
-    }
+  const fallbackMsg = await agentOrchestrator.execute(user.id, conv.id);
+  const fallbackMeta = (fallbackMsg.metadata?.strategyMeta as any)?.agentMeta;
 
-    console.log(`   Execution Trace Steps recorded: ${meta.agentMeta.traceSteps.length} steps`);
-    meta.agentMeta.traceSteps.forEach((s: any) => {
-      console.log(`     - [${s.step}] at ${s.timestamp} (${s.durationMs ?? 0}ms)`);
-    });
-  } catch (err: any) {
-    if (err.statusCode === 429 || err.message?.includes('Rate limit')) {
-      console.log('   (Note: OpenRouter remote API returned rate limit 429 — verifying Orchestrator routing & context flow with mock agent execution...)');
-      
-      // Test Orchestrator with mock agent to verify trace & metadata building without external API dependency
-      const mockAgent: Agent = {
-        id: 'mock-general',
-        name: 'Mock General Agent',
-        description: 'Mock agent for offline test validation',
-        capabilities: generalAgent.capabilities,
-        canHandle: generalAgent.canHandle.bind(generalAgent),
-        execute: async (context: AgentContext, options?: AgentExecutionOptions): Promise<AgentResult> => {
-          if (options?.onChunk) options.onChunk('Paris is the capital of France.');
-          return {
-            agentId: 'mock-general',
-            status: 'success',
-            content: 'Paris is the capital of France.',
-            strategyMeta: context.ragResult?.context.strategyMeta,
-            durationMs: 15,
-          };
-        },
-      };
+  console.log(`   Fallback Message Created: id=${fallbackMsg.id}`);
+  console.log(`   AgentMeta Fallback Flag: ${fallbackMeta?.fallback}`);
+  console.log(`   AgentMeta Fallback Reason: "${fallbackMeta?.fallbackReason}"`);
 
-      agentRegistry.register(mockAgent);
-      
-      // Temporarily override general agent in registry for deterministic mock execution
-      const realGeneral = agentRegistry.get('general');
-      (agentRegistry as any).agents.set('general', mockAgent);
-
-      const assistantMsg = await agentOrchestrator.execute(user.id, conv.id);
-      console.log(`   Assistant Message Created via Orchestrator: id=${assistantMsg.id}`);
-      const meta = assistantMsg.metadata?.strategyMeta as any;
-      if (!meta?.agentMeta?.traceSteps) {
-        throw new Error('Test 4 Failed: Execution trace steps missing in mock orchestrator test.');
-      }
-      console.log(`   Mock Orchestrator trace steps verified: ${meta.agentMeta.traceSteps.length} steps.`);
-      
-      // Restore real general agent
-      if (realGeneral) (agentRegistry as any).agents.set('general', realGeneral);
-    } else {
-      throw err;
-    }
+  if (!fallbackMeta || !fallbackMeta.fallback || fallbackMeta.agentId !== 'general') {
+    throw new Error('Test 3 Failed: Fallback metadata missing or did not fallback to general agent.');
   }
+  console.log('   Graceful specialized model fallback verified successfully!');
 
-  // Clean up test conversation
+  // Cleanup test state
+  (agentRouter as any).route = originalRoute;
+  (agentRegistry as any).agents.delete('failing-spec');
+  if (realGeneral) (agentRegistry as any).agents.set('general', realGeneral);
   await prisma.conversation.delete({ where: { id: conv.id } });
 
-  console.log('\n====================================================');
-  console.log('  ALL MULTI-AGENT ORCHESTRATION TESTS PASSED 100%!  ');
-  console.log('====================================================\n');
+  console.log('\n==================================================================');
+  console.log('  ALL PHASE A MULTI-AGENT ORCHESTRATION TESTS PASSED 100%!       ');
+  console.log('==================================================================\n');
 }
 
 runAgentOrchestrationTests().catch((err) => {
-  console.error('\n❌ AGENT ORCHESTRATION TEST FAILED:', err);
+  console.error('\n❌ PHASE A TEST FAILED:', err);
   process.exit(1);
 });

@@ -90,10 +90,19 @@ export function FileDropzone({ onFileUploaded }: FileDropzoneProps) {
         onDrop={handleDrop}
         onClick={() => !isUploading && fileInputRef.current?.click()}
         className={`relative flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-dashed transition-all cursor-pointer select-none ${
-          isDragging
-            ? 'border-blue-500 bg-blue-500/10 scale-[1.01]'
-            : 'border-white/10 hover:border-blue-500/40 bg-[#0F172A]/40 hover:bg-[#0F172A]/80'
+          isDragging ? 'scale-[1.01]' : ''
         } ${isUploading ? 'opacity-80 pointer-events-none' : ''}`}
+        style={
+          isDragging
+            ? {
+                backgroundColor: 'var(--primary-muted)',
+                borderColor: 'var(--primary)',
+              }
+            : {
+                backgroundColor: 'var(--surface-elevated)',
+                borderColor: 'var(--border)',
+              }
+        }
       >
         <input
           ref={fileInputRef}
@@ -104,16 +113,23 @@ export function FileDropzone({ onFileUploaded }: FileDropzoneProps) {
         />
 
         <div className="flex flex-col items-center text-center space-y-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-inner">
-            <FileUp className="h-6 w-6" />
+          <div
+            className="flex h-12 w-12 items-center justify-center rounded-2xl border shadow-xs"
+            style={{
+              backgroundColor: 'var(--primary-muted)',
+              borderColor: 'var(--primary-border)',
+              color: 'var(--primary)',
+            }}
+          >
+            <FileUp className="h-6 w-6" style={{ color: 'var(--primary)' }} />
           </div>
 
           <div className="space-y-1">
-            <p className="text-sm font-semibold text-foreground">
+            <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
               {isUploading ? 'Uploading file...' : 'Upload Knowledge Documents'}
             </p>
-            <p className="text-xs text-slate-400 max-w-sm">
-              Drag & drop documents here or <span className="text-blue-400 font-medium underline">browse files</span>
+            <p className="text-xs max-w-sm" style={{ color: 'var(--muted)' }}>
+              Drag & drop documents here or <span className="font-medium underline cursor-pointer" style={{ color: 'var(--primary)' }}>browse files</span>
             </p>
           </div>
 
@@ -121,26 +137,31 @@ export function FileDropzone({ onFileUploaded }: FileDropzoneProps) {
             {['PDF', 'Markdown', 'TXT', 'DOCX'].map((type) => (
               <span
                 key={type}
-                className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-md bg-white/[0.05] text-slate-300 border border-white/[0.08]"
+                className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-md border"
+                style={{
+                  backgroundColor: 'var(--surface)',
+                  borderColor: 'var(--border)',
+                  color: 'var(--text-secondary)',
+                }}
               >
                 {type}
               </span>
             ))}
-            <span className="inline-flex items-center text-[10px] text-slate-400 px-1 py-0.5">
+            <span className="inline-flex items-center text-[10px] px-1 py-0.5" style={{ color: 'var(--muted)' }}>
               Max 20 MB
             </span>
           </div>
 
           {isUploading && (
             <div className="w-full max-w-xs pt-2 space-y-1.5">
-              <div className="flex justify-between text-xs text-slate-300">
+              <div className="flex justify-between text-xs" style={{ color: 'var(--text-secondary)' }}>
                 <span>Uploading...</span>
                 <span>{uploadProgress}%</span>
               </div>
-              <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+              <div className="h-1.5 w-full rounded-full overflow-hidden border" style={{ backgroundColor: 'var(--input)', borderColor: 'var(--border)' }}>
                 <div
-                  className="h-full bg-blue-500 transition-all duration-200"
-                  style={{ width: `${uploadProgress}%` }}
+                  className="h-full transition-all duration-200"
+                  style={{ backgroundColor: 'var(--primary)', width: `${uploadProgress}%` }}
                 />
               </div>
             </div>
@@ -149,15 +170,15 @@ export function FileDropzone({ onFileUploaded }: FileDropzoneProps) {
       </div>
 
       {errorMessage && (
-        <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs">
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 dark:text-rose-400 text-xs">
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>{errorMessage}</span>
         </div>
       )}
 
       {duplicateNotice && (
-        <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs">
-          <CheckCircle2 className="h-4 w-4 shrink-0 text-amber-400" />
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs">
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-amber-500" />
           <span>{duplicateNotice}</span>
         </div>
       )}

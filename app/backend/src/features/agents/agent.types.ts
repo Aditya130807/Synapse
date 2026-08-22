@@ -9,6 +9,7 @@ export type AgentCapability =
   | 'memory.read'
   | 'memory.write'
   | 'tools.execute'
+  | 'calculator.execute'
   | 'web.search'
   | 'code.execute';
 
@@ -37,12 +38,68 @@ export interface AgentExecutionTraceStep {
   details?: Record<string, unknown>;
 }
 
+import type { ToolResult } from './tools/tool.types.js';
+
+export type CollaborationMode = 'single' | 'sequential' | 'parallel';
+
+export type TaskStatus = 'pending' | 'running' | 'completed' | 'failed' | 'skipped';
+
+export interface AgentTask {
+  id: string;
+  agentId: string;
+  objective: string;
+  dependencies?: string[];
+  status: TaskStatus;
+  result?: string;
+  durationMs?: number;
+  error?: string;
+  citations?: Citation[];
+  toolCalls?: ToolResult[];
+}
+
+export interface CollaborationDecision {
+  mode: CollaborationMode;
+  agents: string[];
+  reason: string;
+  confidence: number;
+  tasks: Array<{
+    id: string;
+    agentId: string;
+    objective: string;
+    dependencies?: string[];
+  }>;
+}
+
+export interface CollaborationResult {
+  requestId: string;
+  mode: CollaborationMode;
+  tasks: AgentTask[];
+  completedTasks: number;
+  failedTasks: number;
+  synthesis: string;
+  durationMs: number;
+  citations?: Citation[];
+}
+
 export interface AgentExecutionMeta {
   agentId: string;
   agentName: string;
   routingReason: string;
   durationMs: number;
   traceSteps: AgentExecutionTraceStep[];
+  provider?: string;
+  requestedModel?: string;
+  selectedModel?: string;
+  resolvedModel?: string;
+  requestedAgent?: string;
+  executedAgent?: string;
+  fallback?: boolean;
+  emergencyFallback?: boolean;
+  fallbackReason?: string;
+  fallbackAttempts?: number;
+  toolCalls?: ToolResult[];
+  collaborationMode?: CollaborationMode;
+  tasks?: AgentTask[];
 }
 
 export interface ToolCallResult {

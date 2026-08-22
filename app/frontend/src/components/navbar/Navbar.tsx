@@ -1,5 +1,5 @@
 import { useAuth } from '@/features/auth';
-import { Menu, Command, Moon, LogOut, User as UserIcon, Sparkles } from 'lucide-react';
+import { Menu, Command, Moon, Sun, LogOut, User as UserIcon, Sparkles } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface NavbarProps {
   onToggleMobileSidebar: () => void;
@@ -17,6 +18,7 @@ interface NavbarProps {
 
 export default function Navbar({ onToggleMobileSidebar }: NavbarProps) {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   const getInitials = (name?: string, email?: string) => {
     if (name && name.trim()) {
@@ -35,47 +37,69 @@ export default function Navbar({ onToggleMobileSidebar }: NavbarProps) {
   const displayName = user?.name || user?.email || 'User';
 
   return (
-    <header className="sticky top-0 z-30 flex h-15 w-full items-center justify-between border-b border-white/[0.08] bg-[#060A14]/85 backdrop-blur-2xl px-4 md:px-6">
+    <header
+      className="sticky top-0 z-30 flex h-15 w-full items-center justify-between border-b px-4 md:px-6 backdrop-blur-2xl transition-colors duration-200"
+      style={{ backgroundColor: 'var(--navbar)', borderColor: 'var(--navbar-border)' }}
+    >
       {/* Left side: Mobile Toggle & Brand Header */}
       <div className="flex items-center gap-3">
         <button
           onClick={onToggleMobileSidebar}
-          className="md:hidden p-2 rounded-xl text-slate-400 hover:bg-white/[0.06] hover:text-white transition-colors"
+          className="md:hidden p-2 rounded-xl transition-colors"
+          style={{ color: 'var(--muted)' }}
           aria-label="Toggle sidebar menu"
         >
           <Menu className="h-5 w-5" />
         </button>
 
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-b from-blue-500/25 to-indigo-600/15 text-blue-400 border border-blue-500/35 shadow-[0_0_15px_rgba(59,130,246,0.2)] text-base">
-            <Sparkles className="h-4.5 w-4.5" />
+          <div
+            className="flex h-9 w-9 items-center justify-center rounded-xl border text-base"
+            style={{
+              backgroundColor: 'var(--primary-muted)',
+              borderColor: 'var(--primary-border)',
+              color: 'var(--primary)',
+            }}
+          >
+            <Sparkles className="h-[18px] w-[18px]" />
           </div>
           <div className="flex flex-col leading-none">
-            <span className="text-[14px] font-bold tracking-tight text-white">Synapse</span>
-            <span className="text-[10px] text-blue-400/80 hidden sm:inline-block font-medium mt-0.5">
+            <span className="text-[14px] font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+              Synapse
+            </span>
+            <span
+              className="text-[10px] hidden sm:inline-block font-medium mt-0.5"
+              style={{ color: 'var(--primary)', opacity: 0.8 }}
+            >
               The AI Workspace
             </span>
           </div>
         </div>
       </div>
 
-      {/* Center: Command Palette Trigger Placeholder (Cursor IDE & Linear Style) */}
+      {/* Center: Command Palette Trigger */}
       <div className="hidden sm:flex flex-1 max-w-md mx-6">
         <button
           type="button"
-          className="w-full flex items-center justify-between px-3.5 py-2 rounded-xl bg-[rgba(15,23,42,0.65)] hover:bg-[#0A0F1D] border border-white/[0.08] hover:border-blue-500/40 text-slate-400 hover:text-slate-200 focus-within:border-blue-500/60 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:shadow-[0_0_16px_rgba(59,130,246,0.25)] transition-all duration-200 text-xs shadow-inner group cursor-pointer"
-          onClick={() => {
-            /* Placeholder for future Command Palette */
+          className="w-full flex items-center justify-between px-3.5 py-2 rounded-xl border text-xs transition-all duration-200 group cursor-pointer"
+          style={{
+            backgroundColor: 'var(--input)',
+            borderColor: 'var(--border)',
+            color: 'var(--muted)',
           }}
-          aria-label="Search or command palette trigger placeholder"
+          onClick={() => { /* Future command palette */ }}
+          aria-label="Search or command palette"
         >
           <div className="flex items-center gap-2.5">
-            <Command className="h-3.5 w-3.5 text-slate-400 group-hover:text-blue-400 transition-colors" />
-            <span className="text-[12px] font-normal text-slate-400 group-hover:text-slate-200">
+            <Command className="h-3.5 w-3.5" style={{ color: 'var(--muted)' }} />
+            <span className="text-[12px] font-normal" style={{ color: 'var(--muted)' }}>
               Search or type a command...
             </span>
           </div>
-          <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded-md border border-white/10 bg-white/[0.06] px-1.5 font-mono text-[10px] font-semibold text-slate-400 shadow-xs">
+          <kbd
+            className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded-md border px-1.5 font-mono text-[10px] font-semibold"
+            style={{ borderColor: 'var(--border)', backgroundColor: 'var(--surface)', color: 'var(--muted)' }}
+          >
             <span className="text-[11px]">⌘</span>K
           </kbd>
         </button>
@@ -83,55 +107,86 @@ export default function Navbar({ onToggleMobileSidebar }: NavbarProps) {
 
       {/* Right side: Actions & User Avatar */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Mobile Command Palette Icon */}
+        {/* Mobile Command icon */}
         <button
           type="button"
-          className="sm:hidden p-2 rounded-xl text-slate-400 hover:bg-white/[0.06] hover:text-white transition-colors"
-          aria-label="Search placeholder"
+          className="sm:hidden p-2 rounded-xl transition-colors"
+          style={{ color: 'var(--muted)' }}
+          aria-label="Search"
         >
-          <Command className="h-4.5 w-4.5" />
+          <Command className="h-[18px] w-[18px]" />
         </button>
 
-        {/* Theme Toggle Placeholder (UI only) */}
+        {/* Theme Toggle — FUNCTIONAL */}
         <button
           type="button"
-          className="p-2 rounded-xl text-slate-400 hover:text-blue-400 hover:bg-white/[0.06] border border-transparent hover:border-white/[0.08] transition-all duration-200 cursor-pointer"
-          title="Theme switching placeholder (Dark mode only)"
-          aria-label="Theme toggle placeholder"
+          onClick={toggleTheme}
+          className="p-2 rounded-xl border border-transparent transition-all duration-200 cursor-pointer"
+          style={{ color: 'var(--muted)' }}
+          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          aria-label="Toggle theme"
         >
-          <Moon className="h-4.5 w-4.5 text-slate-400 hover:text-blue-400 transition-colors" />
+          {theme === 'dark' ? (
+            <Sun className="h-[18px] w-[18px]" />
+          ) : (
+            <Moon className="h-[18px] w-[18px]" />
+          )}
         </button>
 
-        {/* User Profile Dropdown Menu */}
+        {/* User Profile Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="relative h-9 px-2 rounded-xl flex items-center gap-2.5 hover:bg-white/[0.06] focus-visible:ring-0 cursor-pointer border border-transparent hover:border-white/[0.08] group transition-all duration-200"
+              className="relative h-9 px-2 rounded-xl flex items-center gap-2.5 focus-visible:ring-0 cursor-pointer border border-transparent transition-all duration-200"
+              style={{ color: 'var(--text-secondary)' }}
             >
-              <Avatar className="h-7 w-7 ring-2 ring-blue-500/30 shadow-[0_0_12px_rgba(59,130,246,0.25)] transition-transform duration-200 group-hover:scale-105">
-                <AvatarFallback className="bg-gradient-to-tr from-blue-600 via-blue-500 to-indigo-600 text-white text-[11px] font-bold">
+              <Avatar className="h-7 w-7 transition-transform duration-200 hover:scale-105"
+                style={{ boxShadow: '0 0 12px var(--primary-glow)', outline: '2px solid var(--primary-border)' }}
+              >
+                <AvatarFallback
+                  className="text-xs font-bold"
+                  style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }}
+                >
                   {getInitials(user?.name, user?.email)}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-[12px] font-semibold text-slate-200 max-w-[120px] truncate hidden md:inline-block">
+              <span
+                className="text-[12px] font-semibold max-w-[120px] truncate hidden md:inline-block"
+                style={{ color: 'var(--text-secondary)' }}
+              >
                 {displayName}
               </span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56 bg-[#0F172A]/95 border-white/[0.08] text-white rounded-xl backdrop-blur-2xl shadow-2xl p-1.5" align="end">
+          <DropdownMenuContent
+            className="w-56 rounded-xl backdrop-blur-2xl shadow-2xl p-1.5 border"
+            style={{
+              backgroundColor: 'var(--dropdown)',
+              borderColor: 'var(--border)',
+              color: 'var(--text-primary)',
+            }}
+            align="end"
+          >
             <DropdownMenuLabel className="font-normal p-2.5">
               <div className="flex flex-col space-y-1">
-                <p className="text-xs font-semibold leading-none text-white">{displayName}</p>
-                <p className="text-[11px] leading-none text-slate-400 truncate mt-0.5">{user?.email}</p>
+                <p className="text-xs font-semibold leading-none" style={{ color: 'var(--text-primary)' }}>
+                  {displayName}
+                </p>
+                <p className="text-[11px] leading-none truncate mt-0.5" style={{ color: 'var(--muted)' }}>
+                  {user?.email}
+                </p>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator className="bg-white/[0.06] my-1" />
-            <DropdownMenuItem className="cursor-pointer gap-2 text-xs text-slate-300 focus:bg-white/[0.08] focus:text-white rounded-lg">
-              <UserIcon className="h-3.5 w-3.5 text-slate-400" />
+            <DropdownMenuSeparator style={{ backgroundColor: 'var(--border-subtle)' }} className="my-1" />
+            <DropdownMenuItem
+              className="cursor-pointer gap-2 text-xs rounded-lg"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              <UserIcon className="h-3.5 w-3.5" style={{ color: 'var(--muted)' }} />
               <span>Profile (UI Only)</span>
             </DropdownMenuItem>
-            <DropdownMenuSeparator className="bg-white/[0.06] my-1" />
+            <DropdownMenuSeparator style={{ backgroundColor: 'var(--border-subtle)' }} className="my-1" />
             <DropdownMenuItem
               onClick={logout}
               className="cursor-pointer gap-2 text-xs text-rose-400 focus:bg-rose-500/10 focus:text-rose-300 rounded-lg"

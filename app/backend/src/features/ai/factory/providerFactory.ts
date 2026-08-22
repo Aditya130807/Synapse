@@ -1,6 +1,7 @@
 import { env } from '../../../config/env.js';
 import { ApiError } from '../../../utils/ApiError.js';
 import { OpenRouterProvider } from '../providers/OpenRouterProvider.js';
+import { OmniRouteProvider } from '../providers/OmniRouteProvider.js';
 import type { AIProvider } from '../providers/AIProvider.js';
 import type { AIProviderName } from '../ai.types.js';
 
@@ -19,32 +20,21 @@ import type { AIProviderName } from '../ai.types.js';
  *
  * @throws ApiError(500) if the configured provider name is not recognized.
  */
-export function providerFactory(): AIProvider {
+export function providerFactory(options?: { model?: string }): AIProvider {
   const providerName = env.AI_PROVIDER as AIProviderName;
 
   switch (providerName) {
-    case 'openrouter':
-      return new OpenRouterProvider();
+    case 'omniroute':
+      return new OmniRouteProvider(options?.model);
 
-    // Future providers — uncomment as they are implemented:
-    // case 'gemini':
-    //   return new GeminiProvider();
-    // case 'openai':
-    //   return new OpenAIProvider();
-    // case 'anthropic':
-    //   return new AnthropicProvider();
-    // case 'groq':
-    //   return new GroqProvider();
-    // case 'ollama':
-    //   return new OllamaProvider();
-    // case 'azure_openai':
-    //   return new AzureOpenAIProvider();
+    case 'openrouter':
+      return new OpenRouterProvider(options?.model);
 
     default:
       throw new ApiError(
         500,
         `AI provider "${providerName}" is not implemented. ` +
-          `Supported providers: openrouter. ` +
+          `Supported providers: omniroute, openrouter. ` +
           `Check your AI_PROVIDER environment variable.`,
       );
   }

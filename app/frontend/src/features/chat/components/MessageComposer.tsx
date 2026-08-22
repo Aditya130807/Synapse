@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Send,
+  ArrowUp,
   Paperclip,
   Sparkles,
   Square,
@@ -147,7 +147,6 @@ export const MessageComposer: React.FC = () => {
         }
       }
     }
-
   };
 
   // Handle send message
@@ -209,22 +208,20 @@ export const MessageComposer: React.FC = () => {
   const getFileIcon = (ext: string) => {
     switch (ext.toLowerCase()) {
       case 'pdf':
-        return <FileText className="h-3.5 w-3.5 text-rose-400" />;
+        return <FileText className="h-3.5 w-3.5 text-rose-500" />;
       case 'md':
       case 'markdown':
-        return <FileCode className="h-3.5 w-3.5 text-indigo-400" />;
+        return <FileCode className="h-3.5 w-3.5 text-indigo-500" />;
       case 'docx':
       case 'doc':
-        return <FileSpreadsheet className="h-3.5 w-3.5 text-blue-400" />;
+        return <FileSpreadsheet className="h-3.5 w-3.5 text-blue-500" />;
       default:
-        return <FileIcon className="h-3.5 w-3.5 text-slate-300" />;
+        return <FileIcon className="h-3.5 w-3.5 text-[var(--muted)]" />;
     }
   };
 
   const placeholderText = isStreaming || isGenerating
     ? 'Synapse AI is generating a response...'
-    : selectedConversationId
-    ? 'Ask Synapse anything... (Enter to send, Shift+Enter for newline)'
     : 'Ask Synapse anything... (Enter to send, Shift+Enter for newline)';
 
   return (
@@ -236,11 +233,18 @@ export const MessageComposer: React.FC = () => {
     >
       {/* Drag-and-Drop Visual Overlay */}
       {isDragging && (
-        <div className="absolute inset-x-4 inset-y-0 z-30 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-blue-500 bg-[#090D16]/95 backdrop-blur-md transition-all animate-in fade-in duration-150 p-6 text-center space-y-1">
-          <Upload className="h-8 w-8 text-blue-400 animate-bounce mb-1" />
-          <p className="text-sm font-semibold text-white">Drop file to attach to prompt</p>
-          <p className="text-xs text-slate-300">Supported: PDF • Markdown • TXT • DOCX</p>
-          <p className="text-[11px] text-amber-400 font-medium">Maximum file size: 20 MB</p>
+        <div
+          className="absolute inset-x-4 inset-y-0 z-30 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed backdrop-blur-md transition-all animate-in fade-in duration-150 p-6 text-center space-y-1"
+          style={{
+            borderColor: 'var(--primary)',
+            backgroundColor: 'var(--surface-elevated)',
+            color: 'var(--text-primary)',
+          }}
+        >
+          <Upload className="h-8 w-8 animate-bounce mb-1" style={{ color: 'var(--primary)' }} />
+          <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Drop file to attach to prompt</p>
+          <p className="text-xs" style={{ color: 'var(--muted)' }}>Supported: PDF • Markdown • TXT • DOCX</p>
+          <p className="text-[11px] font-medium" style={{ color: 'var(--primary)' }}>Maximum file size: 20 MB</p>
         </div>
       )}
 
@@ -248,24 +252,26 @@ export const MessageComposer: React.FC = () => {
         {/* Toast Notice Banner */}
         {toastNotice && (
           <div
-            className={`flex items-center justify-between gap-2 rounded-xl border px-3.5 py-2 text-xs font-medium animate-in fade-in duration-150 shadow-md ${
-              toastNotice.isError
-                ? 'border-rose-500/40 bg-rose-500/15 text-rose-300'
-                : 'border-blue-500/30 bg-blue-500/10 text-blue-300'
-            }`}
+            className="flex items-center justify-between gap-2 rounded-xl border px-3.5 py-2 text-xs font-medium animate-in fade-in duration-150 shadow-xs"
+            style={{
+              backgroundColor: toastNotice.isError ? 'rgba(225, 29, 72, 0.1)' : 'var(--primary-muted)',
+              borderColor: toastNotice.isError ? 'rgba(225, 29, 72, 0.3)' : 'var(--primary-border)',
+              color: toastNotice.isError ? '#E11D48' : 'var(--primary)',
+            }}
           >
             <div className="flex items-center gap-2">
               {toastNotice.isError ? (
-                <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
+                <AlertCircle className="h-4 w-4 shrink-0 text-rose-500" />
               ) : (
-                <Info className="h-4 w-4 shrink-0 text-blue-400" />
+                <Info className="h-4 w-4 shrink-0" style={{ color: 'var(--primary)' }} />
               )}
               <span>{toastNotice.text}</span>
             </div>
             <button
               type="button"
               onClick={() => setToastNotice(null)}
-              className="text-slate-400 hover:text-white p-0.5 rounded-lg"
+              className="p-0.5 rounded-lg transition-colors cursor-pointer"
+              style={{ color: 'var(--muted)' }}
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -275,32 +281,45 @@ export const MessageComposer: React.FC = () => {
         {/* Composer Attached Files Chips Bar */}
         {(composerFiles.length > 0 || isUploading) && (
           <div className="flex flex-col space-y-1.5 px-1 pb-1">
-            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-blue-400">
-              <Sparkles className="h-3 w-3 text-blue-400" />
+            <div className="flex items-center gap-1.5 text-[11px] font-semibold" style={{ color: 'var(--primary)' }}>
+              <Sparkles className="h-3 w-3" style={{ color: 'var(--primary)' }} />
               <span>Prompt Context Attachments ({composerFiles.length})</span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {composerFiles.map((f) => (
                 <div
                   key={f.fileId}
-                  className="group flex items-center gap-2 px-2.5 py-1.5 rounded-xl border border-blue-500/25 bg-[#0F172A]/90 backdrop-blur-md text-xs text-slate-200 shadow-sm transition-all hover:border-blue-500/50"
+                  className="group flex items-center gap-2 px-2.5 py-1.5 rounded-xl border text-xs shadow-2xs transition-all"
+                  style={{
+                    backgroundColor: 'var(--surface)',
+                    borderColor: 'var(--border)',
+                    color: 'var(--text-primary)',
+                  }}
                 >
                   <div className="flex items-center gap-1.5 truncate max-w-[180px]">
                     {getFileIcon(f.extension)}
-                    <span className="font-medium text-slate-200 truncate" title={f.filename}>
+                    <span className="font-medium truncate" style={{ color: 'var(--text-primary)' }} title={f.filename}>
                       {f.filename}
                     </span>
                   </div>
 
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded border border-blue-500/20">
-                    <CheckCircle2 className="h-2.5 w-2.5 text-blue-400" />
+                  <span
+                    className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded border"
+                    style={{
+                      backgroundColor: 'var(--primary-muted)',
+                      borderColor: 'var(--primary-border)',
+                      color: 'var(--primary)',
+                    }}
+                  >
+                    <CheckCircle2 className="h-2.5 w-2.5" />
                     <span>Attached</span>
                   </span>
 
                   <button
                     type="button"
                     onClick={() => removeComposerFile(f.fileId)}
-                    className="text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 p-0.5 rounded-lg transition-colors cursor-pointer ml-0.5"
+                    className="p-0.5 rounded-lg transition-colors cursor-pointer ml-0.5 hover:bg-rose-500/10 hover:text-rose-500"
+                    style={{ color: 'var(--muted)' }}
                     title="Remove attachment"
                   >
                     <X className="h-3.5 w-3.5" />
@@ -310,48 +329,55 @@ export const MessageComposer: React.FC = () => {
 
               {/* Active Uploading Indicator Chip */}
               {isUploading && (
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-xs text-amber-300 animate-pulse">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-400" />
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs animate-pulse" style={{ backgroundColor: 'var(--primary-muted)', borderColor: 'var(--primary-border)', color: 'var(--primary)' }}>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   <span className="font-medium truncate max-w-[140px]">{uploadingFileName}</span>
-                  <span className="font-mono text-[11px] text-amber-400">{uploadProgress}%</span>
+                  <span className="font-mono text-[11px]">{uploadProgress}%</span>
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* Floating Input Card Container */}
-        <div className="relative flex items-center gap-3 rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#080D1A]/95 focus-within:border-[#3B82F6]/70 focus-within:ring-4 focus-within:ring-[#3B82F6]/20 shadow-[0_10px_30px_rgba(0,0,0,0.5)] p-2.5 transition-all duration-300 backdrop-blur-2xl">
+        {/* Floating Input Container Card */}
+        <div
+          className="relative flex items-center gap-3 rounded-3xl border p-2.5 transition-all duration-200 shadow-md backdrop-blur-2xl"
+          style={{
+            backgroundColor: 'var(--composer)',
+            borderColor: 'var(--border)',
+          }}
+        >
           {/* Attachment Dropdown Button */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="p-2 text-slate-400 hover:text-blue-400 hover:bg-white/[0.05] rounded-xl transition-all shrink-0 cursor-pointer"
+                className="p-2.5 rounded-2xl transition-all shrink-0 cursor-pointer hover:bg-[var(--surface-hover)]"
+                style={{ color: 'var(--muted)' }}
                 title="Attach Document"
               >
                 <Paperclip className="h-4 w-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-64 bg-[#0F172A] border-white/10 text-slate-200">
+            <DropdownMenuContent align="start" className="w-64 border shadow-xl" style={{ backgroundColor: 'var(--dropdown)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
               <DropdownMenuItem
                 onClick={() => fileInputRef.current?.click()}
-                className="gap-2.5 text-xs cursor-pointer focus:bg-white/[0.08]"
+                className="gap-2.5 text-xs cursor-pointer"
               >
-                <Upload className="h-4 w-4 text-blue-400 shrink-0" />
+                <Upload className="h-4 w-4 shrink-0" style={{ color: 'var(--primary)' }} />
                 <div className="flex flex-col">
-                  <span className="font-medium text-slate-200">Upload New File</span>
-                  <span className="text-[10px] text-slate-400">PDF, MD, DOCX, TXT • Max 20 MB</span>
+                  <span className="font-medium" style={{ color: 'var(--text-primary)' }}>Upload New File</span>
+                  <span className="text-[10px]" style={{ color: 'var(--muted)' }}>PDF, MD, DOCX, TXT • Max 20 MB</span>
                 </div>
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => setShowAttachModal(true)}
-                className="gap-2.5 text-xs cursor-pointer focus:bg-white/[0.08]"
+                className="gap-2.5 text-xs cursor-pointer"
               >
-                <Library className="h-4 w-4 text-indigo-400 shrink-0" />
+                <Library className="h-4 w-4 shrink-0" style={{ color: 'var(--primary)' }} />
                 <div className="flex flex-col">
-                  <span className="font-medium text-slate-200">Choose from Knowledge Base</span>
-                  <span className="text-[10px] text-slate-400">Reuse saved documents</span>
+                  <span className="font-medium" style={{ color: 'var(--text-primary)' }}>Choose from Knowledge Base</span>
+                  <span className="text-[10px]" style={{ color: 'var(--muted)' }}>Reuse saved documents</span>
                 </div>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -366,7 +392,7 @@ export const MessageComposer: React.FC = () => {
             onChange={handleFileChange}
           />
 
-          {/* Auto-Resizing Textarea with Paste Handler */}
+          {/* Auto-Resizing Textarea */}
           <textarea
             ref={textareaRef}
             value={content}
@@ -375,13 +401,23 @@ export const MessageComposer: React.FC = () => {
             onPaste={handlePaste}
             placeholder={placeholderText}
             rows={1}
-            className="flex-1 bg-transparent text-xs sm:text-sm text-[#F8FAFC] placeholder-slate-400/60 focus:outline-none resize-none py-1.5 px-1 font-normal leading-relaxed max-h-[220px]"
+            className="flex-1 bg-transparent text-xs sm:text-sm focus:outline-none resize-none py-2 px-1 font-normal leading-relaxed max-h-[220px]"
+            style={{
+              color: 'var(--text-primary)',
+            }}
           />
 
-          {/* Model Indicator Badge */}
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 bg-white/[0.04] text-[11px] text-slate-300 select-none shrink-0">
-            <Sparkles className="h-3 w-3 text-blue-400" />
-            <span className="font-medium text-slate-200">OpenRouter (GPT-OSS)</span>
+          {/* Synapse AI Model Badge Button */}
+          <div
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] select-none shrink-0"
+            style={{
+              backgroundColor: 'var(--surface-elevated)',
+              borderColor: 'var(--border-subtle)',
+              color: 'var(--text-secondary)',
+            }}
+          >
+            <Sparkles className="h-3 w-3" style={{ color: 'var(--primary)' }} />
+            <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>Synapse AI</span>
           </div>
 
           {/* Send / Stop Button */}
@@ -389,7 +425,7 @@ export const MessageComposer: React.FC = () => {
             <button
               type="button"
               onClick={cancelGeneration}
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-500/20 border border-rose-500/50 text-rose-400 hover:bg-rose-500/30 hover:text-rose-300 hover:scale-105 active:scale-95 transition-all duration-200 shrink-0 cursor-pointer shadow-[0_0_15px_rgba(244,63,94,0.3)] animate-pulse"
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-500/20 border border-rose-500/50 text-rose-500 hover:bg-rose-500/30 hover:scale-105 active:scale-95 transition-all duration-200 shrink-0 cursor-pointer shadow-xs animate-pulse"
               title="Stop generating (Esc)"
             >
               <Square className="h-4 w-4 fill-current" />
@@ -399,17 +435,30 @@ export const MessageComposer: React.FC = () => {
               type="button"
               onClick={handleSend}
               disabled={(!content.trim() && composerFiles.length === 0) || isUploading}
-              className={`flex h-9 w-9 items-center justify-center rounded-xl font-medium transition-all duration-200 shrink-0 ${
+              className="flex h-9 w-9 items-center justify-center rounded-xl font-medium transition-all duration-200 shrink-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 active:scale-95 shadow-xs"
+              style={
                 (content.trim() || composerFiles.length > 0) && !isUploading
-                  ? 'bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-[0_0_18px_rgba(59,130,246,0.4)] hover:shadow-[0_0_24px_rgba(59,130,246,0.6)] hover:scale-105 active:scale-95 cursor-pointer'
-                  : 'bg-white/[0.04] text-slate-500 border border-white/[0.04] cursor-not-allowed'
-              }`}
+                  ? {
+                      backgroundColor: 'var(--primary)',
+                      color: 'var(--primary-foreground)',
+                    }
+                  : {
+                      backgroundColor: 'var(--surface-elevated)',
+                      color: 'var(--muted)',
+                      border: '1px solid var(--border)',
+                    }
+              }
               title="Send message (Enter)"
             >
-              <Send className="h-4 w-4" />
+              <ArrowUp className="h-4 w-4" />
             </button>
           )}
         </div>
+
+        {/* Footer Disclaimer Text */}
+        <p className="text-[11px] text-center pt-1" style={{ color: 'var(--muted)' }}>
+          Synapse may make mistakes. Please verify important information.
+        </p>
       </div>
 
       {/* Attach Existing File Modal */}

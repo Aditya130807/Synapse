@@ -25,7 +25,7 @@ export class OpenRouterProvider implements AIProvider {
   private readonly apiKey: string;
   private readonly model: string;
 
-  constructor() {
+  constructor(modelOverride?: string) {
     if (!env.OPENROUTER_API_KEY) {
       throw new ApiError(
         503,
@@ -34,7 +34,7 @@ export class OpenRouterProvider implements AIProvider {
     }
 
     this.apiKey = env.OPENROUTER_API_KEY;
-    this.model = env.OPENROUTER_MODEL;
+    this.model = modelOverride || env.OPENROUTER_MODEL;
   }
 
   /**
@@ -131,13 +131,16 @@ export class OpenRouterProvider implements AIProvider {
       throw new ApiError(502, 'OpenRouter stream response body is unreadable.');
     }
 
+    // fullContent accumulates ONLY delta.content — the model's actual answer.
+    // reasoning_content (present on some models) is intentionally excluded.
     let fullContent = '';
     const reader = (response.body as ReadableStream<Uint8Array>).getReader();
     const decoder = new TextDecoder('utf-8');
     let buffer = '';
+    let streamDone = false;
 
     try {
-      while (true) {
+      outer: while (true) {
         if (signal?.aborted) {
           await reader.cancel();
           break;
@@ -148,7 +151,7 @@ export class OpenRouterProvider implements AIProvider {
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
-        buffer = lines.pop() || ''; // Preserve incomplete line in buffer
+        buffer = lines.pop() || ''; // Preserve incomplete last line in buffer
 
         for (const line of lines) {
           const trimmed = line.trim();
@@ -157,7 +160,8 @@ export class OpenRouterProvider implements AIProvider {
           if (trimmed.startsWith('data: ')) {
             const dataStr = trimmed.slice(6).trim();
             if (dataStr === '[DONE]') {
-              break;
+              streamDone = true;
+              break outer; // Exit both the for-loop and the while-loop
             }
 
             try {
@@ -178,6 +182,12 @@ export class OpenRouterProvider implements AIProvider {
         throw new ApiError(499, 'Request cancelled by user.');
       }
       throw err;
+    }
+
+    // If the stream completed normally but produced no content, treat it as a
+    // provider failure so the fallback executor can try the next model.
+    if (!signal?.aborted && streamDone && !fullContent) {
+      throw new ApiError(502, 'OpenRouter stream completed with empty content.');
     }
 
     return { content: fullContent };

@@ -47,20 +47,31 @@ export function FileRenameModal({ file, onClose, onRenamed }: FileRenameModalPro
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md rounded-2xl border border-white/10 bg-[#0F172A] shadow-2xl p-6 space-y-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+      <div
+        className="relative w-full max-w-md rounded-2xl border shadow-2xl p-6 space-y-4"
+        style={{ backgroundColor: 'var(--modal)', borderColor: 'var(--border)' }}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
-              <Edit2 className="h-4 w-4" />
+            <div
+              className="flex h-9 w-9 items-center justify-center rounded-xl border"
+              style={{
+                backgroundColor: 'var(--primary-muted)',
+                borderColor: 'var(--primary-border)',
+                color: 'var(--primary)',
+              }}
+            >
+              <Edit2 className="h-4 w-4" style={{ color: 'var(--primary)' }} />
             </div>
-            <h3 className="text-base font-semibold text-foreground">Rename File</h3>
+            <h3 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>Rename File</h3>
           </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="h-8 w-8 text-slate-400 hover:text-white rounded-lg"
+            className="h-8 w-8 rounded-lg cursor-pointer"
+            style={{ color: 'var(--muted)' }}
           >
             <X className="h-4 w-4" />
           </Button>
@@ -68,31 +79,34 @@ export function FileRenameModal({ file, onClose, onRenamed }: FileRenameModalPro
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-300">File Name</label>
+            <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>File Name</label>
             <Input
               value={filename}
               onChange={(e) => setFilename(e.target.value)}
               placeholder="Enter new filename..."
               autoFocus
-              className="bg-slate-900 border-white/10 text-slate-200 text-sm focus:border-blue-500"
+              className="text-sm rounded-xl"
+              style={{ backgroundColor: 'var(--input)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
             />
           </div>
 
-          {error && <p className="text-xs text-rose-400">{error}</p>}
+          {error && <p className="text-xs text-rose-500 dark:text-rose-400">{error}</p>}
 
           <div className="flex justify-end gap-2 pt-2">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
-              className="text-xs border-white/10 text-slate-300 hover:bg-white/[0.08]"
+              className="text-xs rounded-xl"
+              style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={saving}
-              className="text-xs bg-blue-600 hover:bg-blue-500 text-white font-medium gap-1.5"
+              className="text-xs font-medium gap-1.5 rounded-xl cursor-pointer"
+              style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }}
             >
               {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               <span>Save Changes</span>

@@ -41,15 +41,15 @@ export function FileCard({ file, onPreview, onDownload, onRename, onDelete }: Fi
   const getIcon = () => {
     switch (file.extension.toLowerCase()) {
       case 'pdf':
-        return <FileText className="h-5 w-5 text-rose-400" />;
+        return <FileText className="h-4.5 w-4.5 text-rose-500 dark:text-rose-400" />;
       case 'md':
       case 'markdown':
-        return <FileCode className="h-5 w-5 text-indigo-400" />;
+        return <FileCode className="h-4.5 w-4.5 text-indigo-600 dark:text-indigo-400" />;
       case 'docx':
       case 'doc':
-        return <FileSpreadsheet className="h-5 w-5 text-blue-400" />;
+        return <FileSpreadsheet className="h-4.5 w-4.5 text-blue-600 dark:text-blue-400" />;
       default:
-        return <FileIcon className="h-5 w-5 text-slate-300" />;
+        return <FileIcon className="h-4.5 w-4.5 text-neutral-500 dark:text-neutral-400" />;
     }
   };
 
@@ -64,12 +64,15 @@ export function FileCard({ file, onPreview, onDownload, onRename, onDelete }: Fi
   };
 
   return (
-    <Card className="group relative flex flex-col justify-between p-4 rounded-xl border border-white/[0.08] bg-[#0F172A]/70 hover:bg-[#0F172A] hover:border-white/[0.15] transition-all shadow-sm">
+    <Card
+      className="group relative flex flex-col justify-between p-4 rounded-xl border transition-all duration-200 shadow-xs"
+      style={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)' }}
+    >
       <div className="space-y-3">
         {/* Header: Icon, badges & options */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/[0.04] border border-white/[0.06]">
+            <div className={`flex h-9 w-9 items-center justify-center rounded-lg border ${extProps.iconBg}`}>
               {getIcon()}
             </div>
             <div>
@@ -84,7 +87,7 @@ export function FileCard({ file, onPreview, onDownload, onRename, onDelete }: Fi
               className={`inline-flex items-center gap-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full border ${statusProps.colorClass}`}
             >
               {file.status === 'processing' ? (
-                <Loader2 className="h-3 w-3 animate-spin text-amber-400" />
+                <Loader2 className="h-3 w-3 animate-spin text-amber-500" />
               ) : (
                 <span className={`h-1.5 w-1.5 rounded-full ${statusProps.dotColor}`} />
               )}
@@ -93,26 +96,35 @@ export function FileCard({ file, onPreview, onDownload, onRename, onDelete }: Fi
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-white rounded-lg">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 rounded-lg transition-colors cursor-pointer"
+                  style={{ color: 'var(--muted)' }}
+                >
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40 bg-[#0F172A] border-white/10 text-slate-200">
-                <DropdownMenuItem onClick={() => onPreview(file)} className="gap-2 text-xs cursor-pointer">
-                  <Eye className="h-3.5 w-3.5 text-blue-400" />
+              <DropdownMenuContent
+                align="end"
+                className="w-40 border shadow-lg"
+                style={{ backgroundColor: 'var(--dropdown)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+              >
+                <DropdownMenuItem onClick={() => onPreview(file)} className="gap-2 text-xs cursor-pointer" style={{ color: 'var(--text-primary)' }}>
+                  <Eye className="h-3.5 w-3.5" style={{ color: 'var(--primary)' }} />
                   <span>Preview</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDownload(file)} className="gap-2 text-xs cursor-pointer">
-                  <Download className="h-3.5 w-3.5 text-emerald-400" />
+                <DropdownMenuItem onClick={() => onDownload(file)} className="gap-2 text-xs cursor-pointer" style={{ color: 'var(--text-primary)' }}>
+                  <Download className="h-3.5 w-3.5" style={{ color: 'var(--muted)' }} />
                   <span>Download</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onRename(file)} className="gap-2 text-xs cursor-pointer">
-                  <Edit2 className="h-3.5 w-3.5 text-amber-400" />
+                <DropdownMenuItem onClick={() => onRename(file)} className="gap-2 text-xs cursor-pointer" style={{ color: 'var(--text-primary)' }}>
+                  <Edit2 className="h-3.5 w-3.5" style={{ color: 'var(--muted)' }} />
                   <span>Rename</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => onDelete(file)}
-                  className="gap-2 text-xs text-rose-400 focus:text-rose-300 cursor-pointer"
+                  className="gap-2 text-xs text-rose-500 dark:text-rose-400 cursor-pointer"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                   <span>Delete</span>
@@ -122,26 +134,29 @@ export function FileCard({ file, onPreview, onDownload, onRename, onDelete }: Fi
           </div>
         </div>
 
-        {/* File Name & Info */}
+        {/* File Name & Metadata Hierarchy */}
         <div className="space-y-1">
           <h4
-            className="text-sm font-semibold text-foreground truncate cursor-pointer hover:text-blue-400 transition-colors"
+            className="text-sm font-semibold tracking-tight truncate cursor-pointer transition-colors"
+            style={{ color: 'var(--text-primary)' }}
             title={file.filename}
             onClick={() => onPreview(file)}
           >
             {file.filename}
           </h4>
-          <div className="flex items-center gap-2 text-xs text-slate-400">
+
+          {/* Size & Relative Time */}
+          <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--muted)' }}>
             <span>{formatBytes(file.size)}</span>
             <span>•</span>
             <span>{formatRelativeDate(file.createdAt)}</span>
           </div>
 
-          {/* RAG Chunks / Token Metadata Badge */}
+          {/* RAG Chunks / Tokens / Pages */}
           {file.status === 'processed' && file.tokenCount !== null && (
-            <div className="flex items-center gap-2 pt-1 text-[11px] text-slate-400 font-mono">
-              <span className="flex items-center gap-1 text-slate-300">
-                <Layers className="h-3 w-3 text-blue-400" />
+            <div className="flex items-center gap-2 pt-0.5 text-[11px] font-mono" style={{ color: 'var(--muted)' }}>
+              <span className="flex items-center gap-1">
+                <Layers className="h-3 w-3" style={{ color: 'var(--muted)' }} />
                 {chunksCount} {chunksCount === 1 ? 'chunk' : 'chunks'}
               </span>
               <span>•</span>
@@ -156,19 +171,19 @@ export function FileCard({ file, onPreview, onDownload, onRename, onDelete }: Fi
           )}
         </div>
 
-        {/* Referenced Conversations List / Badge */}
-
-        <div className="pt-2 border-t border-white/[0.04]">
+        {/* Referenced Conversations ("Used in") Section */}
+        <div className="pt-2.5 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
           {conversationCount === 0 ? (
-            <span className="text-[11px] text-slate-500 italic">Not referenced in any chat</span>
+            <span className="text-[11px] italic" style={{ color: 'var(--muted)' }}>Not referenced in any chat</span>
           ) : conversationCount === 1 && firstConv ? (
-            <div className="flex items-center gap-1.5 text-[11px] text-slate-400 truncate">
-              <MessageSquare className="h-3 w-3 text-blue-400 shrink-0" />
-              <span className="text-slate-400">Used in</span>
+            <div className="flex items-center gap-1.5 text-[11px] truncate">
+              <MessageSquare className="h-3 w-3 shrink-0" style={{ color: 'var(--primary)' }} />
+              <span style={{ color: 'var(--muted)' }}>Used in</span>
               <button
                 type="button"
                 onClick={(e) => handleConversationClick(firstConv.id, e)}
-                className="font-medium text-blue-400 hover:underline truncate text-left cursor-pointer"
+                className="font-medium hover:underline truncate text-left cursor-pointer"
+                style={{ color: 'var(--primary)' }}
                 title={firstConv.title}
               >
                 {firstConv.title}
@@ -176,25 +191,31 @@ export function FileCard({ file, onPreview, onDownload, onRename, onDelete }: Fi
             </div>
           ) : (
             <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
-                <MessageSquare className="h-3 w-3 text-blue-400 shrink-0" />
-                <span>Used in {conversationCount} conversations</span>
+              <div className="flex items-center gap-1.5 text-[11px]">
+                <MessageSquare className="h-3 w-3 shrink-0" style={{ color: 'var(--primary)' }} />
+                <span style={{ color: 'var(--muted)' }}>Used in</span>
+                <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{conversationCount} conversations</span>
               </div>
-              <div className="flex flex-wrap gap-1">
+              <div className="flex flex-wrap gap-1 pt-0.5">
                 {conversations.slice(0, 2).map((c) => (
                   c.conversation ? (
                     <button
                       key={c.conversation.id}
                       type="button"
                       onClick={(e) => handleConversationClick(c.conversation.id, e)}
-                      className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-300 hover:bg-blue-500/20 transition-colors truncate max-w-[140px] cursor-pointer"
+                      className="text-[10px] px-2 py-0.5 rounded-full border transition-colors truncate max-w-[140px] cursor-pointer"
+                      style={{
+                        backgroundColor: 'var(--primary-muted)',
+                        borderColor: 'var(--primary-border)',
+                        color: 'var(--primary)',
+                      }}
                     >
                       {c.conversation.title}
                     </button>
                   ) : null
                 ))}
                 {conversationCount > 2 && (
-                  <span className="text-[10px] px-1.5 py-0.5 text-slate-400 font-mono">
+                  <span className="text-[10px] px-1.5 py-0.5 font-mono" style={{ color: 'var(--muted)' }}>
                     +{conversationCount - 2} more
                   </span>
                 )}
@@ -204,25 +225,26 @@ export function FileCard({ file, onPreview, onDownload, onRename, onDelete }: Fi
         </div>
       </div>
 
-
-      {/* Quick Action Footer */}
-      <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between gap-2">
+      {/* Card Quick Actions Footer */}
+      <div className="mt-4 pt-2.5 border-t flex items-center justify-between gap-2" style={{ borderColor: 'var(--border-subtle)' }}>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => onPreview(file)}
-          className="flex-1 h-8 text-xs gap-1.5 text-slate-300 hover:text-white hover:bg-white/[0.06] rounded-lg"
+          className="flex-1 h-8 text-xs gap-1.5 rounded-lg transition-colors cursor-pointer"
+          style={{ color: 'var(--text-secondary)' }}
         >
-          <Eye className="h-3.5 w-3.5 text-blue-400" />
+          <Eye className="h-3.5 w-3.5" style={{ color: 'var(--muted)' }} />
           <span>Preview</span>
         </Button>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => onDownload(file)}
-          className="flex-1 h-8 text-xs gap-1.5 text-slate-300 hover:text-white hover:bg-white/[0.06] rounded-lg"
+          className="flex-1 h-8 text-xs gap-1.5 rounded-lg transition-colors cursor-pointer"
+          style={{ color: 'var(--text-secondary)' }}
         >
-          <Download className="h-3.5 w-3.5 text-slate-400" />
+          <Download className="h-3.5 w-3.5" style={{ color: 'var(--muted)' }} />
           <span>Download</span>
         </Button>
       </div>
