@@ -4,9 +4,9 @@
   "description": "Synapse API Server",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
+    "dev": "node init && tsx watch src/server.ts",
+    "build": "node init && tsc",
+    "start": "node init && node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:validate": "prisma validate"
   },
